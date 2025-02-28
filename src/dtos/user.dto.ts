@@ -1,5 +1,12 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEmail, IsNotEmpty, MinLength } from "class-validator";
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MinLength,
+} from "class-validator";
+import { MulterFile } from "multer";
 
 export class CreateUserDto {
   @ApiProperty({
@@ -47,4 +54,27 @@ export class LoginDto {
   @IsNotEmpty()
   @MinLength(6)
   password: string;
+}
+
+export class UpdateUserDto {
+  @ApiProperty({
+    example: "John Doe",
+    description: "Updated name of the user",
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @ApiProperty({
+    example: "9988778899",
+    description: "Updated mobile number",
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  mobile?: string;
+
+  @ApiProperty({ type: "string", format: "binary", required: false })
+  image?: MulterFile;
 }
