@@ -12,8 +12,8 @@ async function bootstrap() {
   });
 
   const config = new DocumentBuilder()
-    .setTitle("Shopping-cart")
-    .setDescription("API for shopping cart")
+    .setTitle("Theater-booking-system")
+    .setDescription("API for booking a ticket at Theater")
     .setVersion("1.0")
     .addBearerAuth()
     .build();

@@ -4,11 +4,22 @@ import {
   ApiResponse,
   ApiConsumes,
   ApiProperty,
+  ApiBearerAuth,
 } from "@nestjs/swagger";
-import { Controller, Post, Body, Req, HttpStatus } from "@nestjs/common";
+import {
+  Controller,
+  Post,
+  Body,
+  Req,
+  HttpStatus,
+  UseGuards,
+  Get,
+  Put,
+} from "@nestjs/common";
 import { AuthService } from "./auth.service";
-import { CreateUserDto, LoginDto } from "../dtos/user.dto";
-
+import { CreateUserDto, LoginDto, UpdateUserDto } from "../dtos/user.dto";
+import { RolesGuard } from "../middlewares/roles.guard";
+import { Role, Roles } from "../utils/roles.enum";
 @ApiTags("Auth")
 @Controller("auth")
 export class AuthController {
@@ -38,5 +49,48 @@ export class AuthController {
   })
   async login(@Body() loginDto: LoginDto, @Req() req) {
     return await this.authService.login(loginDto, req.url);
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.SuperAdmin)
+  @Post("register-sub-admin")
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Register a new user" })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: "User successfully registered",
+  })
+  @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: "Bad request" })
+  async registerSubAdmin(@Body() createUserDto: CreateUserDto, @Req() req) {
+    return this.authService.register(createUserDto, req.path, "sub_admin");
+  }
+
+  @Get("profile")
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Get user profile" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: "Profile fetched successfully",
+  })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: "Unauthorized" })
+  async getProfile(@Req() req) {
+    return this.authService.getProfile(req.user.id, req.url);
+  }
+
+  @Put("update-profile")
+  @ApiConsumes("multipart/form-data")
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Update user profile" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: "Profile updated successfully",
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: "Invalid input data",
+  })
+  async updateProfile(@Req() req, @Body() updateUserDto: UpdateUserDto) {
+    updateUserDto.image = req.body.image;
+    return this.authService.updateProfile(req.user.id, updateUserDto, req.url);
   }
 }
