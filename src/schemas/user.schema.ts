@@ -14,14 +14,17 @@ export class User {
   @Prop({ required: true })
   mobile: number;
 
-  @Prop({ required: true })
+  @Prop({ required: false })
   password: string;
 
   @Prop({ required: true, default: "customer" })
   role: string;
 
-  @Prop({ required: true })
+  @Prop({ required: false })
   image: string;
+
+  @Prop({ required: false })
+  passwordResetToken: string | null;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
