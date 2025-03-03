@@ -78,12 +78,12 @@ export class AuthService {
           expiresAt: new Date(Date.now() + 3600000),
         });
 
-        const resetLink = `http://192.168.0.104:5173/auth/create-password?token=${passwordResetToken}`;
-        await sendEmail(
-          email,
-          "Set Your Password",
-          `Click here to set your password: ${resetLink}`
-        );
+        const setPasswordLink = `${process.env.FRONTEND_URL}?token=${passwordResetToken}`;
+
+        await sendEmail(email, "Set Your Password", "set-password", {
+          name: name,
+          setPasswordLink,
+        });
       }
 
       const newUser = { ...user.toObject(), password: undefined };
@@ -326,12 +326,12 @@ export class AuthService {
         expiresAt: new Date(Date.now() + 3600000),
       });
 
-      const resetLink = `http://192.168.0.104:5173/create-password?token=${newToken}`;
-      await sendEmail(
-        email,
-        "Reset Your Password",
-        `Click here to reset your password: ${resetLink}`
-      );
+      const setPasswordLink = `${process.env.FRONTEND_URL}?token=${newToken}`;
+
+      await sendEmail(email, "Set Your Password", "set-password", {
+        name: user.name,
+        setPasswordLink,
+      });
 
       return createResponse(
         HttpStatus.OK,
