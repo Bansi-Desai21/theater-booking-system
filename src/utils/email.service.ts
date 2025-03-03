@@ -1,6 +1,13 @@
 import * as nodemailer from "nodemailer";
+import * as fs from "fs";
+import * as path from "path";
 
-export const sendEmail = async (to: string, subject: string, text: string) => {
+export const sendEmail = async (
+  to: string,
+  subject: string,
+  templateName: string,
+  templateData: Record<string, string>
+) => {
   try {
     const transporter = nodemailer.createTransport({
       service: "gmail",
@@ -10,11 +17,25 @@ export const sendEmail = async (to: string, subject: string, text: string) => {
       },
     });
 
+    const templatePath = path.resolve(
+      process.cwd(),
+      "src",
+      "utils",
+      "templates",
+      "set-password.html"
+    );
+
+    let htmlContent = fs.readFileSync(templatePath, "utf-8");
+
+    for (const [key, value] of Object.entries(templateData)) {
+      htmlContent = htmlContent.replace(new RegExp(`{{${key}}}`, "g"), value);
+    }
+
     const mailOptions = {
       from: `"Cinema Booking" <${process.env.EMAIL_USER}>`,
       to,
       subject,
-      text,
+      html: htmlContent,
     };
 
     await transporter.sendMail(mailOptions);
