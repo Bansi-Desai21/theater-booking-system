@@ -9,33 +9,57 @@ import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import * as bcrypt from "bcrypt";
 import * as _ from "lodash";
-import { CreateUserDto, LoginDto, UpdateUserDto } from "../dtos/user.dto";
+import {
+  CreateUserDto,
+  LoginDto,
+  UpdateUserDto,
+  SetPasswordDto,
+  SubAdminDto,
+} from "../dtos/user.dto";
 import { User, UserDocument } from "../schemas/user.schema";
 import {
   createResponse,
   EnhancedHttpException,
 } from "../utils/helper.response.function";
 import * as jwt from "jsonwebtoken";
-
+import * as crypto from "crypto";
+import { sendEmail } from "../utils/email.service";
+import { PasswordReset } from "../schemas/paawordReset.schema";
 @Injectable()
 export class AuthService {
-  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
+  constructor(
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(PasswordReset.name)
+    private passwordResetModel: Model<PasswordReset>
+  ) {}
 
-  async register(createUserDto: CreateUserDto, path: string, role?: string) {
+  async register(
+    createUserDto: CreateUserDto | SubAdminDto,
+    path: string,
+    role?: string
+  ) {
     try {
-      const { name, email, password, mobile } = createUserDto;
-
+      const { name, email, mobile } = createUserDto;
+      const password =
+        "password" in createUserDto ? createUserDto.password : undefined;
       const existingUser = await this.userModel.findOne({ email });
       if (existingUser) {
         throw new ConflictException({
-          statusCode: HttpStatus.FORBIDDEN,
+          statusCode: HttpStatus.CONFLICT,
           success: false,
           message: "Email is already taken.",
           path: path,
         });
       }
 
-      const hashedPassword = await bcrypt.hash(password, 10);
+      let hashedPassword: string | null = null;
+      let passwordResetToken: string | null = null;
+
+      if (role !== "sub_admin" && password) {
+        hashedPassword = await bcrypt.hash(password, 10);
+      } else {
+        passwordResetToken = crypto.randomBytes(32).toString("hex");
+      }
 
       const user = await this.userModel.create({
         name,
@@ -43,10 +67,26 @@ export class AuthService {
         password: hashedPassword,
         mobile,
         role,
+        passwordResetToken,
       });
 
-      const newUser = _.omit(user.toObject(), ["password"]);
+      if (role === "sub_admin") {
+        const passwordResetToken = crypto.randomBytes(32).toString("hex");
+        await this.passwordResetModel.create({
+          email,
+          token: passwordResetToken,
+          expiresAt: new Date(Date.now() + 3600000),
+        });
 
+        const resetLink = `http://192.168.0.104:5173/auth/create-password?token=${passwordResetToken}`;
+        await sendEmail(
+          email,
+          "Set Your Password",
+          `Click here to set your password: ${resetLink}`
+        );
+      }
+
+      const newUser = { ...user.toObject(), password: undefined };
       return createResponse(
         HttpStatus.CREATED,
         true,
@@ -71,8 +111,8 @@ export class AuthService {
 
       const user = await this.userModel.findOne({ email });
       if (!user) {
-        throw new BadRequestException({
-          statusCode: HttpStatus.FORBIDDEN,
+        throw new NotFoundException({
+          statusCode: HttpStatus.NOT_FOUND,
           success: false,
           message: "User does not exist.",
           path: path,
@@ -103,6 +143,8 @@ export class AuthService {
         userId: user._id,
         email: user.email,
         token: token,
+        name: user.name,
+        role: user.role,
       };
 
       return createResponse(
@@ -130,7 +172,8 @@ export class AuthService {
         throw new NotFoundException({
           statusCode: HttpStatus.NOT_FOUND,
           success: false,
-          message: "User not found",
+          message: "User does not exist.",
+          path: path,
         });
       }
       return createResponse(
@@ -165,7 +208,8 @@ export class AuthService {
         throw new NotFoundException({
           statusCode: HttpStatus.NOT_FOUND,
           success: false,
-          message: "User not found",
+          message: "User does not exist.",
+          path: path,
         });
       }
 
@@ -174,6 +218,126 @@ export class AuthService {
         true,
         "Profile updated successfully",
         updatedUser
+      );
+    } catch (error) {
+      throw new EnhancedHttpException(
+        {
+          statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+          message: error?.message || "Internal Server Error",
+          path: path,
+        },
+        error.status || HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  async verifyResetToken(token: string, path: string) {
+    try {
+      const resetEntry = await this.passwordResetModel.findOne({ token });
+      if (!resetEntry) {
+        throw new BadRequestException({
+          statusCode: HttpStatus.BAD_REQUEST,
+          success: false,
+          message: "Invalid or expired token.",
+          path: path,
+        });
+      }
+
+      return createResponse(
+        HttpStatus.OK,
+        true,
+        "Token is valid",
+        resetEntry.email
+      );
+    } catch (error) {
+      throw new EnhancedHttpException(
+        {
+          statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+          message: error?.message || "Internal Server Error",
+          path: path,
+        },
+        error.status || HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  async setPassword(setPasswordDto: SetPasswordDto, path: string) {
+    try {
+      const { token, newPassword } = setPasswordDto;
+      const resetEntry = await this.passwordResetModel.findOne({ token });
+      if (!resetEntry) {
+        throw new BadRequestException({
+          statusCode: HttpStatus.BAD_REQUEST,
+          success: false,
+          message: "Invalid or expired token.",
+          path: path,
+        });
+      }
+
+      const user = await this.userModel.findOne({ email: resetEntry.email });
+      if (!user) {
+        throw new NotFoundException({
+          statusCode: HttpStatus.NOT_FOUND,
+          success: false,
+          message: "User does not exist.",
+          path: path,
+        });
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      user.password = hashedPassword;
+      await user.save();
+
+      await this.passwordResetModel.deleteOne({ token });
+      return createResponse(
+        HttpStatus.OK,
+        true,
+        "Password set successfully!",
+        {}
+      );
+    } catch (error) {
+      throw new EnhancedHttpException(
+        {
+          statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+          message: error?.message || "Internal Server Error",
+          path: path,
+        },
+        error.status || HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  async requestReset(email: string, path: string) {
+    try {
+      const user = await this.userModel.findOne({ email });
+      if (!user) {
+        throw new NotFoundException({
+          statusCode: HttpStatus.NOT_FOUND,
+          success: false,
+          message: "User does not exist.",
+          path: path,
+        });
+      }
+
+      const newToken = crypto.randomBytes(32).toString("hex");
+      await this.passwordResetModel.create({
+        email,
+        token: newToken,
+        expiresAt: new Date(Date.now() + 3600000),
+      });
+
+      const resetLink = `http://192.168.0.104:5173/create-password?token=${newToken}`;
+      await sendEmail(
+        email,
+        "Reset Your Password",
+        `Click here to reset your password: ${resetLink}`
+      );
+
+      return createResponse(
+        HttpStatus.OK,
+        true,
+        "Password reset link sent. Please check your email.",
+        {}
       );
     } catch (error) {
       throw new EnhancedHttpException(
