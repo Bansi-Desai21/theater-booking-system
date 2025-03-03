@@ -22,9 +22,6 @@ export class User {
 
   @Prop({ required: false })
   image: string;
-
-  @Prop({ required: false })
-  passwordResetToken: string | null;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
