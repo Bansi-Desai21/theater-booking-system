@@ -3,8 +3,8 @@ import {
   ApiOperation,
   ApiResponse,
   ApiConsumes,
-  ApiProperty,
   ApiBearerAuth,
+  ApiParam,
 } from "@nestjs/swagger";
 import {
   Controller,
@@ -15,9 +15,16 @@ import {
   UseGuards,
   Get,
   Put,
+  Param,
 } from "@nestjs/common";
 import { AuthService } from "./auth.service";
-import { CreateUserDto, LoginDto, UpdateUserDto } from "../dtos/user.dto";
+import {
+  CreateUserDto,
+  LoginDto,
+  SetPasswordDto,
+  SubAdminDto,
+  UpdateUserDto,
+} from "../dtos/user.dto";
 import { RolesGuard } from "../middlewares/roles.guard";
 import { Role, Roles } from "../utils/roles.enum";
 @ApiTags("Auth")
@@ -61,8 +68,8 @@ export class AuthController {
     description: "User successfully registered",
   })
   @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: "Bad request" })
-  async registerSubAdmin(@Body() createUserDto: CreateUserDto, @Req() req) {
-    return this.authService.register(createUserDto, req.path, "sub_admin");
+  async registerSubAdmin(@Body() subAdminDto: SubAdminDto, @Req() req) {
+    return this.authService.register(subAdminDto, req.path, "sub_admin");
   }
 
   @Get("profile")
@@ -92,5 +99,39 @@ export class AuthController {
   async updateProfile(@Req() req, @Body() updateUserDto: UpdateUserDto) {
     updateUserDto.image = req.body.image;
     return this.authService.updateProfile(req.user.id, updateUserDto, req.url);
+  }
+
+  @Post("request-reset")
+  @ApiOperation({ summary: "Request password reset link" })
+  @ApiResponse({
+    status: 200,
+    description: "Password reset link sent successfully",
+  })
+  @ApiResponse({ status: 404, description: "User not found" })
+  async requestReset(@Req() req, @Body("email") email: string) {
+    return this.authService.requestReset(email, req.url);
+  }
+
+  @Get("verify-reset-token/:token")
+  @ApiOperation({ summary: "Verify if a password reset token is valid" })
+  @ApiParam({
+    name: "token",
+    required: true,
+    example: "random_token_123",
+    description: "Password reset token",
+  })
+  @ApiResponse({ status: 200, description: "Token is valid" })
+  @ApiResponse({ status: 400, description: "Invalid or expired token" })
+  async verifyResetToken(@Req() req, @Param("token") token: string) {
+    return this.authService.verifyResetToken(token, req.url);
+  }
+
+  @Post("set-password")
+  @ApiOperation({ summary: "Set new password using reset token" })
+  @ApiResponse({ status: 200, description: "Password set successfully" })
+  @ApiResponse({ status: 400, description: "Invalid or expired token" })
+  @ApiResponse({ status: 404, description: "User not found" })
+  async setPassword(@Req() req, @Body() setPasswordDto: SetPasswordDto) {
+    return this.authService.setPassword(setPasswordDto, req.url);
   }
 }

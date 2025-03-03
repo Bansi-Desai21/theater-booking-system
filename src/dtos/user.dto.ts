@@ -32,7 +32,7 @@ export class CreateUserDto {
     description: "User password",
     minLength: 6,
   })
-  @IsNotEmpty()
+  @IsOptional()
   @MinLength(6)
   password: string;
 }
@@ -77,4 +77,43 @@ export class UpdateUserDto {
 
   @ApiProperty({ type: "string", format: "binary", required: false })
   image?: MulterFile;
+}
+
+export class SubAdminDto {
+  @ApiProperty({
+    example: "user@example.com",
+    description: "User email address",
+  })
+  @IsEmail()
+  email: string;
+
+  @ApiProperty({ example: "John", description: "First name of the user" })
+  @IsNotEmpty()
+  name: string;
+
+  @ApiProperty({
+    example: "9988778899",
+    description: "Mobile number of the user",
+  })
+  @IsNotEmpty()
+  mobile: number;
+}
+
+export class SetPasswordDto {
+  @ApiProperty({
+    example: "random_token_123",
+    description: "Reset token received via email",
+  })
+  @IsNotEmpty()
+  @IsString()
+  token: string;
+
+  @ApiProperty({
+    example: "NewSecurePassword@123",
+    description: "New password for the user",
+  })
+  @IsNotEmpty()
+  @IsString()
+  @MinLength(6)
+  newPassword: string;
 }
