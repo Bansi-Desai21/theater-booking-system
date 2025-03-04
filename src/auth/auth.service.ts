@@ -25,6 +25,7 @@ import * as jwt from "jsonwebtoken";
 import * as crypto from "crypto";
 import { sendEmail } from "../utils/email.service";
 import { PasswordReset } from "../schemas/paawordReset.schema";
+import { Role } from "../utils/roles.enum";
 @Injectable()
 export class AuthService {
   constructor(
@@ -346,6 +347,41 @@ export class AuthService {
         true,
         "Password reset link sent. Please check your email.",
         {}
+      );
+    } catch (error) {
+      throw new EnhancedHttpException(
+        {
+          statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+          message: error?.message || "Internal Server Error",
+          path: path,
+        },
+        error.status || HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  async getAllSubAdmins(page: number, limit: number, path: string) {
+    try {
+      const skip = (page - 1) * limit;
+
+      const query = { role: Role.SubAdmin };
+
+      const subAdmins = await this.userModel
+        .find(query, "-password")
+        .skip(skip)
+        .limit(limit)
+        .exec();
+
+      const total = await this.userModel.countDocuments(query);
+
+      return createResponse(
+        200,
+        true,
+        "List of SubAdmins retrieved successfully.",
+        {
+          total,
+          subAdmins,
+        }
       );
     } catch (error) {
       throw new EnhancedHttpException(

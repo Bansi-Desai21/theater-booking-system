@@ -6,6 +6,7 @@ import {
   ApiBearerAuth,
   ApiParam,
   ApiBody,
+  ApiQuery,
 } from "@nestjs/swagger";
 import {
   Controller,
@@ -17,6 +18,7 @@ import {
   Get,
   Put,
   Param,
+  Query,
 } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import {
@@ -142,5 +144,39 @@ export class AuthController {
   @ApiResponse({ status: 404, description: "User not found" })
   async setPassword(@Req() req, @Body() setPasswordDto: SetPasswordDto) {
     return this.authService.setPassword(setPasswordDto, req.url);
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.SuperAdmin)
+  @Get("sub-admins")
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Get a list of SubAdmins" })
+  @ApiResponse({
+    status: 200,
+    description: "List of SubAdmins retrieved successfully",
+  })
+  @ApiResponse({ status: 500, description: "Internal Server Error" })
+  @ApiQuery({
+    name: "page",
+    required: false,
+    example: 1,
+    description: "Page number (default: 1)",
+  })
+  @ApiQuery({
+    name: "limit",
+    required: false,
+    example: 10,
+    description: "Number of records per page (default: 10)",
+  })
+  async getAllSubAdmins(
+    @Query("page") page = 1,
+    @Query("limit") limit = 10,
+    @Req() req
+  ) {
+    return this.authService.getAllSubAdmins(
+      Number(page),
+      Number(limit),
+      req.url
+    );
   }
 }
