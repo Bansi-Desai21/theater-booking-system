@@ -7,9 +7,10 @@ import {
   Get,
   Param,
   Query,
+  Patch,
 } from "@nestjs/common";
 import { TheaterService } from "./theater.service";
-import { CreateTheaterDto } from "../dtos/createTheater.dto";
+import { CreateTheaterDto, UpdateTheaterDto } from "../dtos/theater.dto";
 import { RolesGuard } from "../middlewares/roles.guard";
 import { Role, Roles } from "../utils/roles.enum";
 import {
@@ -85,11 +86,18 @@ export class TheaterController {
     example: 10,
     description: "Items per page (default: 10)",
   })
+  @ApiQuery({
+    name: "ownerId",
+    type: String,
+    example: "65cda43bfc13ae1d4f7f5b6c",
+    required: false,
+  })
   @ApiResponse({
     status: 200,
     description: "List of theaters retrieved successfully.",
   })
   async listTheaters(
+    @Query("ownerId") ownerId: string,
     @Query("page") page = 1,
     @Query("limit") limit = 10,
     @Req() req
@@ -98,6 +106,40 @@ export class TheaterController {
       Number(page),
       Number(limit),
       req.user,
+      req.url,
+      ownerId
+    );
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.SubAdmin)
+  @Patch("update-theater/:id")
+  @ApiOperation({
+    summary:
+      "Update theater details (Only SubAdmins can update their theaters)",
+  })
+  @ApiParam({
+    name: "id",
+    example: "65d4e6a1c7b3a12f4e56789a",
+    description: "Theater ID",
+  })
+  @ApiResponse({ status: 200, description: "Theater updated successfully." })
+  @ApiResponse({ status: 400, description: "Bad Request. Validation failed." })
+  @ApiResponse({
+    status: 403,
+    description: "Forbidden. Only SubAdmins can update theaters.",
+  })
+  @ApiResponse({ status: 404, description: "Theater not found." })
+  async updateTheater(
+    @Param("id") id: string,
+    @Body() updateTheaterDto: UpdateTheaterDto,
+    @Req() req
+  ) {
+    const ownerId = req.user.id;
+    return this.theaterService.updateTheater(
+      id,
+      ownerId,
+      updateTheaterDto,
       req.url
     );
   }
