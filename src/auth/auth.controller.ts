@@ -19,6 +19,7 @@ import {
   Put,
   Param,
   Query,
+  Patch,
 } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import {
@@ -176,6 +177,32 @@ export class AuthController {
     return this.authService.getAllSubAdmins(
       Number(page),
       Number(limit),
+      req.url
+    );
+  }
+  @UseGuards(RolesGuard)
+  @Roles(Role.SuperAdmin)
+  @ApiBearerAuth()
+  @Patch("owner-acc-status/:ownerId")
+  @ApiParam({
+    name: "ownerId",
+    example: "65d4e6a1c7b3a12f4e56789a",
+    description: "owner ID",
+  })
+  @ApiOperation({ summary: "Activate/Deactivate a theater" })
+  @ApiResponse({
+    status: 200,
+    description: "Theater Owner status updated successfully",
+  })
+  @ApiResponse({
+    status: 403,
+    description: "Unauthorized: Only owner can update",
+  })
+  @ApiResponse({ status: 404, description: "Theater Owner not found" })
+  async updateTheaterStatus(@Param("ownerId") ownerId: string, @Req() req) {
+    return this.authService.updateTheaterOwnerStatus(
+      req["user"],
+      ownerId,
       req.url
     );
   }

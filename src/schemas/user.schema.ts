@@ -23,8 +23,8 @@ export class User {
   @Prop({ required: false })
   image: string;
 
-  @Prop({ required: false })
-  isComplete: boolean;
+  @Prop({ required: false, default: true })
+  isActive: boolean;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

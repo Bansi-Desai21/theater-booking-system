@@ -4,6 +4,7 @@ import {
   BadRequestException,
   HttpStatus,
   NotFoundException,
+  ForbiddenException,
 } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
@@ -15,6 +16,7 @@ import {
   UpdateUserDto,
   SetPasswordDto,
   SubAdminDto,
+  AuthUserdDto,
 } from "../dtos/user.dto";
 import { User, UserDocument } from "../schemas/user.schema";
 import {
@@ -143,15 +145,10 @@ export class AuthService {
         expiresIn: "7d",
       });
 
-      const userObject = {
-        userId: user._id,
-        email: user.email,
-        token: token,
-        name: user.name,
-        role: user.role,
-        isComplete: user.isComplete,
-      };
-
+      const getUser = await this.userModel
+        .findOne({ email }, { password: 0 })
+        .lean();
+      const userObject = { ...getUser, token };
       return createResponse(
         HttpStatus.OK,
         true,
@@ -382,6 +379,53 @@ export class AuthService {
           total,
           subAdmins,
         }
+      );
+    } catch (error) {
+      throw new EnhancedHttpException(
+        {
+          statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+          message: error?.message || "Internal Server Error",
+          path: path,
+        },
+        error.status || HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  async updateTheaterOwnerStatus(
+    user: AuthUserdDto,
+    theaterId: string,
+    path: string
+  ) {
+    try {
+      const theaterOwner = await this.userModel.findById(theaterId, {
+        password: 0,
+      });
+
+      if (!theaterOwner) {
+        throw new NotFoundException({
+          statusCode: 404,
+          success: false,
+          message: "Theater Owner not found.",
+        });
+      }
+
+      if (user.role !== Role.SuperAdmin) {
+        throw new ForbiddenException({
+          statusCode: 403,
+          success: false,
+          message: "You are not authorized to take this action.",
+        });
+      }
+
+      theaterOwner.isActive = !theaterOwner.isActive;
+      await theaterOwner.save();
+
+      return createResponse(
+        200,
+        true,
+        `Theater Owner ${theaterOwner.isActive ? "activated" : "deactivated"} successfully.`,
+        theaterOwner
       );
     } catch (error) {
       throw new EnhancedHttpException(
