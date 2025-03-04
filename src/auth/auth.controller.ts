@@ -5,6 +5,7 @@ import {
   ApiConsumes,
   ApiBearerAuth,
   ApiParam,
+  ApiBody,
 } from "@nestjs/swagger";
 import {
   Controller,
@@ -108,6 +109,14 @@ export class AuthController {
     description: "Password reset link sent successfully",
   })
   @ApiResponse({ status: 404, description: "User not found" })
+  @ApiBody({
+    schema: {
+      type: "object",
+      properties: {
+        email: { type: "string", example: "user@example.com" },
+      },
+    },
+  })
   async requestReset(@Req() req, @Body("email") email: string) {
     return this.authService.requestReset(email, req.url);
   }

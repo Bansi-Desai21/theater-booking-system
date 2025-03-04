@@ -1,6 +1,8 @@
 import { ApiProperty } from "@nestjs/swagger";
 import {
   IsEmail,
+  IsEnum,
+  IsMongoId,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -116,4 +118,18 @@ export class SetPasswordDto {
   @IsString()
   @MinLength(6)
   newPassword: string;
+}
+
+export class AuthUserdDto {
+  @ApiProperty({ description: "User ID", example: "65d75f6e3a8b5a001f3c1234" })
+  @IsMongoId()
+  id: string;
+
+  @ApiProperty({ description: "User email", example: "user@example.com" })
+  @IsEmail()
+  email: string;
+
+  @ApiProperty({ description: "User role", example: "customer" })
+  @IsEnum(["super_admin", "sub_admin", "customer"])
+  role: string;
 }
