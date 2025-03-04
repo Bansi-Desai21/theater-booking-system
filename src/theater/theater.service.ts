@@ -8,17 +8,20 @@ import {
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
 import { CreateTheaterDto, UpdateTheaterDto } from "../dtos/theater.dto";
-import { Theater } from "../schemas/theater.schema";
+import { Theater, TheaterDocument } from "../schemas/theater.schema";
 import {
   createResponse,
   EnhancedHttpException,
 } from "../utils/helper.response.function";
 import { AuthUserdDto } from "../dtos/user.dto";
 import { Role } from "../utils/roles.enum";
-
+import { User, UserDocument } from "../schemas/user.schema";
 @Injectable()
 export class TheaterService {
-  constructor(@InjectModel("Theater") private theaterModel: Model<Theater>) {}
+  constructor(
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(Theater.name) private theaterModel: Model<TheaterDocument>
+  ) {}
 
   async addTheater(
     createTheaterDto: CreateTheaterDto,
@@ -128,6 +131,13 @@ export class TheaterService {
         .exec();
 
       const total = await this.theaterModel.countDocuments(query);
+      let owner = null;
+      if (ownerId) {
+        owner = await this.userModel.findById(
+          { _id: ownerId },
+          { password: 0 }
+        );
+      }
 
       return createResponse(
         200,
@@ -136,6 +146,7 @@ export class TheaterService {
         {
           total,
           theaters,
+          owner,
         }
       );
     } catch (error) {
@@ -217,6 +228,51 @@ export class TheaterService {
         true,
         "Theater updated successfully.",
         updatedTheater
+      );
+    } catch (error) {
+      throw new EnhancedHttpException(
+        {
+          statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+          message: error?.message || "Internal Server Error",
+          path: path,
+        },
+        error.status || HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  async updateTheaterStatus(
+    user: AuthUserdDto,
+    theaterId: string,
+    path: string
+  ) {
+    try {
+      const theater = await this.theaterModel.findById(theaterId);
+
+      if (!theater) {
+        throw new NotFoundException({
+          statusCode: 404,
+          success: false,
+          message: "Theater not found.",
+        });
+      }
+
+      if (theater.ownerId.toString() !== user.id) {
+        throw new ForbiddenException({
+          statusCode: 403,
+          success: false,
+          message: "You are not authorized to update this theater.",
+        });
+      }
+
+      theater.isActive = !theater.isActive;
+      await theater.save();
+
+      return createResponse(
+        200,
+        true,
+        `Theater ${theater.isActive ? "activated" : "deactivated"} successfully.`,
+        theater
       );
     } catch (error) {
       throw new EnhancedHttpException(

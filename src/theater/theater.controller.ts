@@ -145,4 +145,30 @@ export class TheaterController {
       req.body.image
     );
   }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.SubAdmin, Role.SuperAdmin)
+  @Patch("status/:theaterId")
+  @ApiParam({
+    name: "theaterId",
+    example: "65d4e6a1c7b3a12f4e56789a",
+    description: "Theater ID",
+  })
+  @ApiOperation({ summary: "Activate/Deactivate a theater" })
+  @ApiResponse({
+    status: 200,
+    description: "Theater status updated successfully",
+  })
+  @ApiResponse({
+    status: 403,
+    description: "Unauthorized: Only owner can update",
+  })
+  @ApiResponse({ status: 404, description: "Theater not found" })
+  async updateTheaterStatus(@Param("theaterId") theaterId: string, @Req() req) {
+    return this.theaterService.updateTheaterStatus(
+      req["user"],
+      theaterId,
+      req.url
+    );
+  }
 }
