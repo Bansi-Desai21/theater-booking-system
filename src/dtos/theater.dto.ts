@@ -1,4 +1,10 @@
-import { IsString, IsNumber, IsNotEmpty, IsOptional } from "class-validator";
+import {
+  IsString,
+  IsNumber,
+  IsNotEmpty,
+  IsOptional,
+  IsMongoId,
+} from "class-validator";
 import { ApiProperty } from "@nestjs/swagger";
 import { MulterFile } from "multer";
 
@@ -20,10 +26,10 @@ export class CreateTheaterDto {
   location: string;
 
   @ApiProperty({
-    example: "Mumbai",
-    description: "The city where the theater is located.",
+    example: "65cda43bfc13ae1d4f7f5b6c",
+    description: "The ID of the city where the theater is located.",
   })
-  @IsString()
+  @IsMongoId()
   @IsNotEmpty()
   city: string;
 
@@ -59,13 +65,12 @@ export class UpdateTheaterDto {
   location?: string;
 
   @ApiProperty({
-    example: "Mumbai",
-    description: "Updated city of the theater.",
-    required: false,
+    example: "65cda43bfc13ae1d4f7f5b6c",
+    description: "The ID of the city where the theater is located.",
   })
-  @IsString()
-  @IsOptional()
-  city?: string;
+  @IsMongoId()
+  @IsNotEmpty()
+  city: string;
 
   @ApiProperty({
     example: 6,

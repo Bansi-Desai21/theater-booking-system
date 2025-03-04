@@ -113,6 +113,7 @@ export class TheaterController {
 
   @UseGuards(RolesGuard)
   @Roles(Role.SubAdmin)
+  @ApiConsumes("multipart/form-data")
   @Patch("update-theater/:id")
   @ApiOperation({
     summary:
@@ -140,7 +141,8 @@ export class TheaterController {
       id,
       ownerId,
       updateTheaterDto,
-      req.url
+      req.url,
+      req.body.image
     );
   }
 }

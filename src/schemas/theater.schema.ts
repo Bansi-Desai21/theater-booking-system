@@ -11,8 +11,8 @@ export class Theater {
   @Prop({ required: true })
   location: string;
 
-  @Prop({ required: true })
-  city: string;
+  @Prop({ type: Types.ObjectId, ref: "City", required: true })
+  city: Types.ObjectId;
 
   @Prop({ required: true })
   no_of_screens: number;
