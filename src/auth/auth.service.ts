@@ -77,8 +77,11 @@ export class AuthService {
           token: passwordResetToken,
           expiresAt: new Date(Date.now() + 3600000),
         });
-
-        const setPasswordLink = `${process.env.FRONTEND_URL}?token=${passwordResetToken}`;
+        await this.userModel.findByIdAndUpdate(
+          { _id: user.id },
+          { $set: { isComplete: false } }
+        );
+        const setPasswordLink = `${process.env.FRONTEND_URL}?token=${passwordResetToken}&email=${user.email}`;
 
         await sendEmail(email, "Set Your Password", "set-password", {
           name: name,
@@ -145,6 +148,7 @@ export class AuthService {
         token: token,
         name: user.name,
         role: user.role,
+        isComplete: user.isComplete,
       };
 
       return createResponse(
@@ -318,15 +322,19 @@ export class AuthService {
           path: path,
         });
       }
+      const tokenExists = await this.passwordResetModel.findOne({ email });
+      let newToken = tokenExists
+        ? tokenExists.token
+        : crypto.randomBytes(32).toString("hex");
+      if (!tokenExists) {
+        await this.passwordResetModel.create({
+          email,
+          token: newToken,
+          expiresAt: new Date(Date.now() + 3600000),
+        });
+      }
 
-      const newToken = crypto.randomBytes(32).toString("hex");
-      await this.passwordResetModel.create({
-        email,
-        token: newToken,
-        expiresAt: new Date(Date.now() + 3600000),
-      });
-
-      const setPasswordLink = `${process.env.FRONTEND_URL}?token=${newToken}`;
+      const setPasswordLink = `${process.env.FRONTEND_URL}?token=${newToken}&email=${user.email}`;
 
       await sendEmail(email, "Set Your Password", "set-password", {
         name: user.name,
