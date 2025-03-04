@@ -45,7 +45,7 @@ export class TheaterService {
       const theater = await this.theaterModel.create({
         name,
         location,
-        city,
+        city: new Types.ObjectId(city),
         no_of_screens,
         ownerId: new Types.ObjectId(ownerId),
         image,
@@ -73,7 +73,9 @@ export class TheaterService {
     try {
       const theater = await this.theaterModel
         .findById(id)
-        .populate("ownerId", "-password");
+        .populate("ownerId", "-password")
+        .populate("city");
+
       if (!theater) {
         throw new NotFoundException({
           statusCode: 404,
@@ -120,6 +122,7 @@ export class TheaterService {
       const theaters = await this.theaterModel
         .find(query)
         .populate("ownerId", "-password")
+        .populate("city")
         .skip(skip)
         .limit(limit)
         .exec();
@@ -151,9 +154,12 @@ export class TheaterService {
     id: string,
     ownerId: string,
     updateTheaterDto: UpdateTheaterDto,
-    path: string
+    path: string,
+    file?: any
   ) {
     try {
+      let { name, location, city, no_of_screens, image } = updateTheaterDto;
+
       const theater = await this.theaterModel.findById(id);
 
       if (!theater) {
@@ -192,9 +198,17 @@ export class TheaterService {
         }
       }
 
+      image = file ? file : theater.image;
+
       const updatedTheater = await this.theaterModel.findByIdAndUpdate(
         id,
-        updateTheaterDto,
+        {
+          name,
+          location,
+          city: new Types.ObjectId(city),
+          no_of_screens,
+          image,
+        },
         { new: true }
       );
 
