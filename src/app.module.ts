@@ -12,7 +12,7 @@ import { CloudinaryModule } from "./cloudinary/cloudinary.module";
 import { UploadMiddleware } from "./middlewares/upload.middleware";
 import { TheaterModule } from "./theater/theater.module";
 import { CityModule } from "./cities/cities.module";
-// import { ScreenModule } from "./screen/screen.module";
+import { ScreenModule } from "./screen/screen.module";
 
 @Module({
   imports: [
@@ -22,7 +22,7 @@ import { CityModule } from "./cities/cities.module";
     CloudinaryModule,
     TheaterModule,
     CityModule,
-    // ScreenModule,
+    ScreenModule,
   ],
   controllers: [],
   providers: [],

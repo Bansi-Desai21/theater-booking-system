@@ -28,12 +28,14 @@ import * as crypto from "crypto";
 import { sendEmail } from "../utils/email.service";
 import { PasswordReset } from "../schemas/paawordReset.schema";
 import { Role } from "../utils/roles.enum";
+import { CloudinaryService } from "../cloudinary/cloudinary.service";
 @Injectable()
 export class AuthService {
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel(PasswordReset.name)
-    private passwordResetModel: Model<PasswordReset>
+    private passwordResetModel: Model<PasswordReset>,
+    private readonly cloudinaryService: CloudinaryService
   ) {}
 
   async register(
@@ -202,6 +204,22 @@ export class AuthService {
     path: string
   ) {
     try {
+      const user = await this.userModel.findById(userId);
+      const file = updateUserDto.image;
+      if (file && user?.image && user.image !== file) {
+        const oldImageUrl = user.image;
+
+        if (oldImageUrl) {
+          const urlParts = oldImageUrl.split("/");
+          const filenameWithExt = urlParts.pop(); // Last part (e.g., "jvldnzrndsurb6njxmny.png")
+          const publicId = filenameWithExt?.split(".")[0]; // Remove file extension
+
+          if (publicId) {
+            await this.cloudinaryService.deleteFile(publicId);
+          }
+        }
+      }
+
       const updatedUser = await this.userModel
         .findByIdAndUpdate(userId, updateUserDto, { new: true })
         .select("-password");

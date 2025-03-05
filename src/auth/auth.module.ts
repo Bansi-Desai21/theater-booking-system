@@ -8,13 +8,14 @@ import {
   PasswordReset,
   PasswordResetSchema,
 } from "../schemas/paawordReset.schema";
-
+import { CloudinaryModule } from "../cloudinary/cloudinary.module";
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: User.name, schema: UserSchema },
       { name: PasswordReset.name, schema: PasswordResetSchema },
     ]),
+    CloudinaryModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, ConfigService],
