@@ -156,7 +156,10 @@ export class ScreenService {
           isRemoved: false,
         }),
       ]);
-      const theaterData = await this.theaterModel.findById(theaterId);
+      const theaterData = await this.theaterModel
+        .findById(theaterId)
+        .populate("city")
+        .populate("ownerId", "-password");
       return createResponse(200, true, "Screens retrieved successfully!", {
         screens,
         total,
