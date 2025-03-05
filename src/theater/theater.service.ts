@@ -35,6 +35,7 @@ export class TheaterService {
         name,
         location,
         ownerId: new Types.ObjectId(ownerId),
+        isRemoved: false,
       });
       if (existingTheater) {
         throw new ConflictException({
@@ -200,6 +201,7 @@ export class TheaterService {
           location: updateTheaterDto.location || theater.location,
           ownerId: new Types.ObjectId(ownerId),
           _id: { $ne: new Types.ObjectId(id) },
+          isRemoved: false,
         });
 
         if (existingTheater) {
