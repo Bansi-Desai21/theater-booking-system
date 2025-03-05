@@ -52,7 +52,7 @@ export class ScreenController {
   }
 
   @UseGuards(RolesGuard)
-  @Roles(Role.SubAdmin)
+  @Roles(Role.SubAdmin, Role.SuperAdmin)
   @Get("get-screen-details/:id")
   @ApiOperation({ summary: "Get screen details by ID" })
   @ApiResponse({
@@ -65,7 +65,7 @@ export class ScreenController {
   }
 
   @UseGuards(RolesGuard)
-  @Roles(Role.SubAdmin)
+  @Roles(Role.SubAdmin, Role.SuperAdmin)
   @Get("list/:theaterId")
   @ApiOperation({ summary: "List all screens of a theater with pagination" })
   @ApiQuery({
