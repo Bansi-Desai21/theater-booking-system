@@ -12,6 +12,7 @@ import { CloudinaryModule } from "./cloudinary/cloudinary.module";
 import { UploadMiddleware } from "./middlewares/upload.middleware";
 import { TheaterModule } from "./theater/theater.module";
 import { CityModule } from "./cities/cities.module";
+// import { ScreenModule } from "./screen/screen.module";
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { CityModule } from "./cities/cities.module";
     CloudinaryModule,
     TheaterModule,
     CityModule,
+    // ScreenModule,
   ],
   controllers: [],
   providers: [],
@@ -37,6 +39,10 @@ export class AppModule implements NestModule {
         {
           path: "theaters/add-theater",
           method: RequestMethod.POST,
+        },
+        {
+          path: "theaters/update-theater/:id",
+          method: RequestMethod.PATCH,
         }
       )
       .apply(AuthMiddleware)

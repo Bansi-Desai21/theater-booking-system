@@ -25,6 +25,9 @@ export class Theater {
 
   @Prop({ default: true })
   isActive: Boolean;
+
+  @Prop({ default: false })
+  isRemoved: Boolean;
 }
 
 export const TheaterSchema = SchemaFactory.createForClass(Theater);
