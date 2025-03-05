@@ -156,10 +156,11 @@ export class ScreenService {
           isRemoved: false,
         }),
       ]);
-
+      const theaterData = await this.theaterModel.findById(theaterId);
       return createResponse(200, true, "Screens retrieved successfully!", {
         screens,
         total,
+        theaterData,
       });
     } catch (error) {
       throw new EnhancedHttpException(
