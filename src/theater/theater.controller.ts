@@ -54,7 +54,7 @@ export class TheaterController {
   }
 
   @UseGuards(RolesGuard)
-  @Roles(Role.SubAdmin)
+  @Roles(Role.SubAdmin, Role.SuperAdmin)
   @Get("get-detail-of-theater/:id")
   @ApiOperation({ summary: "Get details of a theater by ID" })
   @ApiParam({
