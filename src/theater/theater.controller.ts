@@ -192,7 +192,7 @@ export class TheaterController {
   })
   @ApiResponse({ status: 404, description: "Theater not found" })
   async softDeleteTheater(@Param("theaterId") theaterId: string, @Req() req) {
-    return this.theaterService.softDeleteTheater(
+    return this.theaterService.deleteTheater(
       theaterId,
       req["user"].id,
       req.url

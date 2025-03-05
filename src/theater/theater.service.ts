@@ -16,11 +16,15 @@ import {
 import { AuthUserdDto } from "../dtos/user.dto";
 import { Role } from "../utils/roles.enum";
 import { User, UserDocument } from "../schemas/user.schema";
+import { Screen, ScreenDocument } from "src/schemas/screen.schema";
+import { CloudinaryService } from "../cloudinary/cloudinary.service";
 @Injectable()
 export class TheaterService {
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
-    @InjectModel(Theater.name) private theaterModel: Model<TheaterDocument>
+    @InjectModel(Theater.name) private theaterModel: Model<TheaterDocument>,
+    @InjectModel(Screen.name) private screenModel: Model<ScreenDocument>,
+    private readonly cloudinaryService: CloudinaryService
   ) {}
 
   async addTheater(
@@ -32,11 +36,14 @@ export class TheaterService {
       const { name, location, city, no_of_screens, image } = createTheaterDto;
 
       const existingTheater = await this.theaterModel.findOne({
-        name,
+        name: {
+          $regex: new RegExp(`^${name?.replace(/[-\s]/g, "[-\\s]*")}$`, "i"),
+        },
         location,
         ownerId: new Types.ObjectId(ownerId),
         isRemoved: false,
       });
+
       if (existingTheater) {
         throw new ConflictException({
           statusCode: HttpStatus.CONFLICT,
@@ -54,11 +61,19 @@ export class TheaterService {
         ownerId: new Types.ObjectId(ownerId),
         image,
       });
-
+      if (theater) {
+        for (let i = 1; i <= no_of_screens; i++) {
+          await this.screenModel.create({
+            name: `Screen ${i}`,
+            totalSeats: 0,
+            theaterId: theater._id,
+          });
+        }
+      }
       return createResponse(
         HttpStatus.CREATED,
         true,
-        "Theater added successfully!",
+        "Theater added successfully with screens!",
         theater
       );
     } catch (error) {
@@ -173,8 +188,6 @@ export class TheaterService {
     try {
       let { name, location, city, no_of_screens, image } = updateTheaterDto;
 
-      console.log(city, "city", updateTheaterDto);
-
       const theater = await this.theaterModel.findById(id);
 
       if (!theater) {
@@ -195,10 +208,15 @@ export class TheaterService {
         });
       }
 
-      if (updateTheaterDto.name || updateTheaterDto.location) {
+      if (name || location) {
         const existingTheater = await this.theaterModel.findOne({
-          name: updateTheaterDto.name || theater.name,
-          location: updateTheaterDto.location || theater.location,
+          name: {
+            $regex: new RegExp(
+              `^${name || theater.name?.replace(/[-\s]/g, "[-\\s]*")}$`,
+              "i"
+            ),
+          },
+          location: location || theater.location,
           ownerId: new Types.ObjectId(ownerId),
           _id: { $ne: new Types.ObjectId(id) },
           isRemoved: false,
@@ -211,6 +229,20 @@ export class TheaterService {
             message: "A theater with this name and location already exists.",
             path: path,
           });
+        }
+      }
+
+      if (file && theater.image && theater.image !== file) {
+        const oldImageUrl = theater.image;
+
+        if (oldImageUrl) {
+          const urlParts = oldImageUrl.split("/");
+          const filenameWithExt = urlParts.pop(); // Last part (e.g., "jvldnzrndsurb6njxmny.png")
+          const publicId = filenameWithExt?.split(".")[0]; // Remove file extension
+
+          if (publicId) {
+            await this.cloudinaryService.deleteFile(publicId);
+          }
         }
       }
 
@@ -291,9 +323,8 @@ export class TheaterService {
     }
   }
 
-  async softDeleteTheater(id: string, ownerId: string, path: string) {
+  async deleteTheater(id: string, ownerId: string, path: string) {
     try {
-      console.log(id, ownerId);
       const theater = await this.theaterModel.findById(id);
 
       if (!theater) {
@@ -316,7 +347,10 @@ export class TheaterService {
 
       theater.isRemoved = true;
       await theater.save();
-
+      await this.screenModel.updateMany(
+        { theaterId: new Types.ObjectId(id) },
+        { $set: { isRemoved: true } }
+      );
       return createResponse(200, true, "Theater deleted successfully.");
     } catch (error) {
       throw new EnhancedHttpException(

@@ -69,8 +69,7 @@ export class UpdateTheaterDto {
     description: "The ID of the city where the theater is located.",
   })
   @IsMongoId()
-  @IsNotEmpty()
-  city: string;
+  city?: string;
 
   @ApiProperty({
     example: 6,
