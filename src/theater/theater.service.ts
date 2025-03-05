@@ -114,11 +114,12 @@ export class TheaterService {
     try {
       const skip = (page - 1) * limit;
       const ownerObjectId = new Types.ObjectId(ownerId);
-      let query = { ownerId: ownerObjectId };
+      let query = { ownerId: ownerObjectId, isRemoved: false };
 
       if (user.role === Role.SubAdmin) {
         query = {
           ownerId: new Types.ObjectId(user.id),
+          isRemoved: false,
         };
       }
 
@@ -170,6 +171,8 @@ export class TheaterService {
   ) {
     try {
       let { name, location, city, no_of_screens, image } = updateTheaterDto;
+
+      console.log(city, "city", updateTheaterDto);
 
       const theater = await this.theaterModel.findById(id);
 
@@ -274,6 +277,45 @@ export class TheaterService {
         `Theater ${theater.isActive ? "activated" : "deactivated"} successfully.`,
         theater
       );
+    } catch (error) {
+      throw new EnhancedHttpException(
+        {
+          statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+          message: error?.message || "Internal Server Error",
+          path: path,
+        },
+        error.status || HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  async softDeleteTheater(id: string, ownerId: string, path: string) {
+    try {
+      console.log(id, ownerId);
+      const theater = await this.theaterModel.findById(id);
+
+      if (!theater) {
+        throw new NotFoundException({
+          statusCode: 404,
+          success: false,
+          message: "Theater not found.",
+          path: path,
+        });
+      }
+
+      if (theater.ownerId.toString() !== ownerId) {
+        throw new ForbiddenException({
+          statusCode: 403,
+          success: false,
+          message: "You are not authorized to delete this theater.",
+          path: path,
+        });
+      }
+
+      theater.isRemoved = true;
+      await theater.save();
+
+      return createResponse(200, true, "Theater deleted successfully.");
     } catch (error) {
       throw new EnhancedHttpException(
         {

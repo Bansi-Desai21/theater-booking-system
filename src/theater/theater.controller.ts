@@ -8,6 +8,7 @@ import {
   Param,
   Query,
   Patch,
+  Delete,
 } from "@nestjs/common";
 import { TheaterService } from "./theater.service";
 import { CreateTheaterDto, UpdateTheaterDto } from "../dtos/theater.dto";
@@ -168,6 +169,32 @@ export class TheaterController {
     return this.theaterService.updateTheaterStatus(
       req["user"],
       theaterId,
+      req.url
+    );
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.SubAdmin)
+  @Delete("delete-theater/:theaterId")
+  @ApiParam({
+    name: "theaterId",
+    example: "65d4e6a1c7b3a12f4e56789a",
+    description: "Theater ID",
+  })
+  @ApiOperation({ summary: "Soft delete a theater" })
+  @ApiResponse({
+    status: 200,
+    description: "Theater deleted successfully",
+  })
+  @ApiResponse({
+    status: 403,
+    description: "Unauthorized: Only the owner can delete",
+  })
+  @ApiResponse({ status: 404, description: "Theater not found" })
+  async softDeleteTheater(@Param("theaterId") theaterId: string, @Req() req) {
+    return this.theaterService.softDeleteTheater(
+      theaterId,
+      req["user"].id,
       req.url
     );
   }
