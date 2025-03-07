@@ -13,6 +13,7 @@ import { UploadMiddleware } from "./middlewares/upload.middleware";
 import { TheaterModule } from "./theater/theater.module";
 import { CityModule } from "./cities/cities.module";
 import { ScreenModule } from "./screen/screen.module";
+import { MovieModule } from "./movies/movies.module";
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { ScreenModule } from "./screen/screen.module";
     TheaterModule,
     CityModule,
     ScreenModule,
+    MovieModule,
   ],
   controllers: [],
   providers: [],
