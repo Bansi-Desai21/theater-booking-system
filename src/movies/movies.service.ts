@@ -43,7 +43,7 @@ export class MovieService {
     }
   }
 
-  private async syncNowShowing() {
+  public async syncNowShowing() {
     const today = moment();
     const sixtyDaysAgo = moment().subtract(60, "days");
     let page = 1;
@@ -62,26 +62,16 @@ export class MovieService {
         if (!movie.release_date) continue;
 
         const releaseDate = moment(movie.release_date);
-        if (releaseDate.isBefore(sixtyDaysAgo) || releaseDate.isAfter(today)) {
-          this.logger.warn(
-            `Skipping old movie in list: ${movie.title} (${movie.release_date})`
-          );
+        if (releaseDate.isBefore(sixtyDaysAgo) || releaseDate.isAfter(today))
           continue;
-        }
 
         const details = await this.fetchMovieDetails(movie.id);
-
-        // Double-check release date in details
         const detailedReleaseDate = moment(details.release_date);
         if (
           detailedReleaseDate.isBefore(sixtyDaysAgo) ||
           detailedReleaseDate.isAfter(today)
-        ) {
-          this.logger.warn(
-            `Skipping after detail check: ${details.title} (${details.release_date})`
-          );
+        )
           continue;
-        }
 
         await this.upsertMovie(details, { isNowShowing: true });
       }
@@ -93,7 +83,7 @@ export class MovieService {
     this.logger.log("Completed sync for Now Showing movies.");
   }
 
-  private async syncUpcoming() {
+  public async syncUpcoming() {
     const today = moment();
     let page = 1;
     let totalPages = 1;
@@ -111,23 +101,11 @@ export class MovieService {
         if (!movie.release_date) continue;
 
         const releaseDate = moment(movie.release_date);
-        if (releaseDate.isBefore(today)) {
-          this.logger.warn(
-            `Skipping past movie in list: ${movie.title} (${movie.release_date})`
-          );
-          continue;
-        }
+        if (releaseDate.isBefore(today)) continue;
 
         const details = await this.fetchMovieDetails(movie.id);
-
-        // Double-check release date in details
         const detailedReleaseDate = moment(details.release_date);
-        if (detailedReleaseDate.isBefore(today)) {
-          this.logger.warn(
-            `Skipping after detail check: ${details.title} (${details.release_date})`
-          );
-          continue;
-        }
+        if (detailedReleaseDate.isBefore(today)) continue;
 
         await this.upsertMovie(details, { isUpcoming: true });
       }
@@ -144,12 +122,23 @@ export class MovieService {
   }
 
   private async fetchMovieDetails(movieId: number) {
-    const url = `${this.TMDB_API_URL}/movie/${movieId}?api_key=${this.TMDB_API_KEY}&append_to_response=credits`;
+    const url = `${this.TMDB_API_URL}/movie/${movieId}?api_key=${this.TMDB_API_KEY}&append_to_response=credits&append_to_response=videos`;
     const response = await firstValueFrom(this.httpService.get(url));
     return response.data;
   }
 
-  private async upsertMovie(details: any, flags: Partial<Movie>) {
+  private async upsertMovie(
+    details: any,
+    flags: {
+      isNowShowing?: boolean;
+      isUpcoming?: boolean;
+    }
+  ) {
+    const categories: string[] = [];
+
+    if (flags.isNowShowing) categories.push("Now Showing");
+    if (flags.isUpcoming) categories.push("Upcoming");
+
     const cast = details.credits?.cast.slice(0, 10).map((member) => ({
       name: member.name,
       character: member.character,
@@ -228,6 +217,7 @@ export class MovieService {
       {
         tmdbId: details.id,
         title: details.title,
+        categories, // Store as array
         languages: [details.original_language],
         genres: details.genres.map((g) => g.name),
         duration: details.runtime,
@@ -245,8 +235,6 @@ export class MovieService {
         cast,
         crew,
         videos: selectedVideos,
-        isNowShowing: flags.isNowShowing || false,
-        isUpcoming: flags.isUpcoming || false,
       },
       { upsert: true }
     );
@@ -256,24 +244,27 @@ export class MovieService {
     );
   }
 
-  async listMovies(path: string) {
+  async listMovies(path: string, query: any) {
     try {
-      const today = new Date();
-      const pastDate = new Date();
-      pastDate.setDate(today.getDate() - 60); // 60 days in the past
-      const futureDate = new Date();
-      futureDate.setDate(today.getDate() + 60); // 60 days in the future
+      const { category, page = 1, limit = 10 } = query;
 
-      const movies = await this.movieModel.find({
-        releaseDate: { $gte: pastDate, $lte: futureDate },
+      const filter: any = {};
+      if (category) filter.categories = category;
+
+      const pageNumber = Number(page);
+      const limitNumber = Number(limit);
+      const skip = (pageNumber - 1) * limitNumber;
+
+      const movies = await this.movieModel
+        .find(filter)
+        .skip(skip)
+        .limit(limitNumber);
+      const totalMovies = await this.movieModel.countDocuments(filter);
+
+      return createResponse(200, true, "Movies retrieved successfully.", {
+        totalMovies,
+        movies,
       });
-
-      return createResponse(
-        200,
-        true,
-        "Movies retrieved successfully.",
-        movies
-      );
     } catch (error) {
       throw new EnhancedHttpException(
         {
@@ -284,5 +275,53 @@ export class MovieService {
         error.status || HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
+  }
+
+  async getMovieById(path: string, movieId: string) {
+    try {
+      const movie = await this.movieModel.findById(movieId);
+
+      if (!movie) {
+        throw new EnhancedHttpException(
+          {
+            statusCode: HttpStatus.NOT_FOUND,
+            message: "Movie not found.",
+            path: path,
+          },
+          HttpStatus.NOT_FOUND
+        );
+      }
+
+      return createResponse(200, true, "Movie retrieved successfully.", movie);
+    } catch (error) {
+      throw new EnhancedHttpException(
+        {
+          statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+          message: error?.message || "Internal Server Error",
+          path: path,
+        },
+        error.status || HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  async deleteMoviesOlderThan90Days() {
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+
+    const oldMovies = await this.movieModel.find({
+      releaseDate: { $lt: ninetyDaysAgo },
+      // categories: { $size: 0 }, // Only delete if categories array is empty
+    });
+
+    if (oldMovies.length > 0) {
+      await this.movieModel.deleteMany({
+        _id: { $in: oldMovies.map((m) => m._id) },
+      });
+    }
+
+    return {
+      message: `${oldMovies.length} old movies deleted successfully.`,
+    };
   }
 }
