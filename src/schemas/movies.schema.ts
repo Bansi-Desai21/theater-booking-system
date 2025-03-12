@@ -68,17 +68,12 @@ export class Movie {
   @Prop({ required: false })
   rating: number;
 
-  @Prop({ default: false })
-  isNowShowing: boolean;
-
-  @Prop({ default: false })
-  isUpcoming: boolean;
-
-  @Prop({ default: false })
-  isPopular: boolean;
-
-  @Prop({ default: false })
-  isTopRated: boolean;
+  @Prop({
+    type: [String],
+    enum: ["Now Showing", "Upcoming"],
+    default: [],
+  })
+  categories: string[];
 
   @Prop({ type: [CastMember], required: false })
   cast: CastMember[];
