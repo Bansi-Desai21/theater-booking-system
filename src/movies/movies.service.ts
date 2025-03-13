@@ -1,5 +1,11 @@
 import { HttpService } from "@nestjs/axios";
-import { HttpStatus, Injectable, Logger } from "@nestjs/common";
+import {
+  BadRequestException,
+  HttpStatus,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { firstValueFrom } from "rxjs";
@@ -9,7 +15,7 @@ import {
   EnhancedHttpException,
 } from "../utils/helper.response.function";
 import * as moment from "moment";
-
+import { CloudinaryService } from "../cloudinary/cloudinary.service";
 @Injectable()
 export class MovieService {
   private readonly logger = new Logger(MovieService.name);
@@ -20,7 +26,8 @@ export class MovieService {
 
   constructor(
     private readonly httpService: HttpService,
-    @InjectModel(Movie.name) private movieModel: Model<MovieDocument>
+    @InjectModel(Movie.name) private movieModel: Model<MovieDocument>,
+    private readonly cloudinaryService: CloudinaryService
   ) {
     this.TMDB_API_URL = process.env.TMDB_API_URL || "";
     this.TMDB_API_KEY = process.env.TMDB_API_KEY || "";
@@ -122,7 +129,7 @@ export class MovieService {
   }
 
   private async fetchMovieDetails(movieId: number) {
-    const url = `${this.TMDB_API_URL}/movie/${movieId}?api_key=${this.TMDB_API_KEY}&append_to_response=credits&append_to_response=videos`;
+    const url = `${this.TMDB_API_URL}/movie/${movieId}?api_key=${this.TMDB_API_KEY}&append_to_response=credits,videos`;
     const response = await firstValueFrom(this.httpService.get(url));
     return response.data;
   }
@@ -246,10 +253,15 @@ export class MovieService {
 
   async listMovies(path: string, query: any) {
     try {
-      const { category, page = 1, limit = 10 } = query;
+      const { category, page = 1, limit = 10, language } = query;
 
       const filter: any = {};
       if (category) filter.categories = category;
+
+      // Apply language filter (only allow en, hi, gu)
+      if (language && this.VALID_LANGUAGES.includes(language)) {
+        filter.languages = language;
+      }
 
       const pageNumber = Number(page);
       const limitNumber = Number(limit);
@@ -304,6 +316,74 @@ export class MovieService {
       );
     }
   }
+  private async extractCloudinaryPublicId(url: string): Promise<string | null> {
+    if (!url?.startsWith("https://res.cloudinary.com")) return null;
+    const pathname = new URL(url).pathname;
+    return pathname.split("/").slice(4).join("/").split(".")[0] || null;
+  }
+
+  async updateMovie(movieId: string, image: any, path: string) {
+    try {
+      const movie = await this.movieModel.findById(movieId);
+      if (!movie) {
+        throw new NotFoundException({
+          statusCode: HttpStatus.NOT_FOUND,
+          success: false,
+          message: "Movie not found.",
+          path: path,
+        });
+      }
+      let newPosterUrl: string = "";
+      if (image) {
+        const isCloudinaryUrl = movie.posterUrl?.startsWith(
+          "https://res.cloudinary.com"
+        );
+
+        if (!movie.posterUrl || isCloudinaryUrl) {
+          if (isCloudinaryUrl) {
+            const publicId = await this.extractCloudinaryPublicId(
+              movie.posterUrl
+            );
+            if (publicId) await this.cloudinaryService.deleteFile(publicId);
+          }
+          newPosterUrl = image;
+        } else {
+          const publicId = await this.extractCloudinaryPublicId(image);
+          if (publicId) await this.cloudinaryService.deleteFile(publicId);
+
+          throw new BadRequestException({
+            statusCode: HttpStatus.BAD_REQUEST,
+            success: false,
+            message: "You can't update the original poster from TMDb.",
+            path: path,
+          });
+        }
+      }
+
+      const updatedMovie = await this.movieModel.findByIdAndUpdate(
+        movieId,
+        {
+          posterUrl: newPosterUrl,
+        },
+        { new: true }
+      );
+
+      return {
+        success: true,
+        message: "Movie updated successfully",
+        data: updatedMovie,
+      };
+    } catch (error) {
+      throw new EnhancedHttpException(
+        {
+          statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+          message: error?.message || "Internal Server Error",
+          path: path,
+        },
+        error.status || HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
 
   async deleteMoviesOlderThan90Days() {
     const ninetyDaysAgo = new Date();
@@ -311,7 +391,6 @@ export class MovieService {
 
     const oldMovies = await this.movieModel.find({
       releaseDate: { $lt: ninetyDaysAgo },
-      // categories: { $size: 0 }, // Only delete if categories array is empty
     });
 
     if (oldMovies.length > 0) {

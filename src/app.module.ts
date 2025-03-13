@@ -45,6 +45,10 @@ export class AppModule implements NestModule {
         {
           path: "theaters/update-theater/:id",
           method: RequestMethod.PATCH,
+        },
+        {
+          path: "movies/update-movie/:id",
+          method: RequestMethod.PUT,
         }
       )
       .apply(AuthMiddleware)

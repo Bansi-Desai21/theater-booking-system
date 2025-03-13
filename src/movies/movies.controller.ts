@@ -6,9 +6,12 @@ import {
   Get,
   Query,
   Param,
+  Put,
 } from "@nestjs/common";
 import {
   ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
   ApiOperation,
   ApiParam,
   ApiQuery,
@@ -41,18 +44,26 @@ export class MovieController {
   @Roles(Role.SuperAdmin, Role.SubAdmin)
   @Get("list")
   @ApiOperation({
-    summary:
-      "Get movies based on filters (Now Showing, Popular, Top Rated, Upcoming) with pagination",
+    summary: "Get movies based on filters (Category, Language) with pagination",
   })
   @ApiQuery({
     name: "category",
     required: false,
     type: String,
     enum: ["Now Showing", "Upcoming"],
+    description: "Filter movies by category",
+  })
+  @ApiQuery({
+    name: "language",
+    required: false,
+    type: String,
+    enum: ["en", "hi", "gu"],
+    description: "Filter movies by language",
   })
   @ApiQuery({ name: "page", required: false, type: Number, example: 1 })
   @ApiQuery({ name: "limit", required: false, type: Number, example: 10 })
   @ApiResponse({ status: 200, description: "Movies retrieved successfully." })
+  @ApiResponse({ status: 400, description: "Invalid query parameters" })
   @ApiResponse({ status: 500, description: "Internal Server Error" })
   async listMovies(@Req() req, @Query() query) {
     return this.movieService.listMovies(req.url, query);
@@ -73,5 +84,32 @@ export class MovieController {
   @ApiResponse({ status: 500, description: "Internal Server Error" })
   async getMovieById(@Req() req, @Param("id") movieId: string) {
     return this.movieService.getMovieById(req.url, movieId);
+  }
+
+  @UseGuards(RolesGuard)
+  @Roles(Role.SuperAdmin, Role.SubAdmin)
+  @Put("update-movie/:id")
+  @ApiConsumes("multipart/form-data")
+  @ApiBody({
+    schema: {
+      type: "object",
+      properties: {
+        image: {
+          type: "string",
+          format: "binary",
+        },
+      },
+    },
+  })
+  @ApiOperation({ summary: "Update movie details manually (including poster)" })
+  @ApiResponse({
+    status: 400,
+    description: "You can't update the original poster from TMDb.",
+  })
+  @ApiResponse({ status: 200, description: "Movie updated successfully." })
+  @ApiResponse({ status: 404, description: "Movie not found." })
+  @ApiResponse({ status: 500, description: "Internal Server Error." })
+  async updateMovie(@Param("id") movieId: string, @Req() req) {
+    return this.movieService.updateMovie(movieId, req.body.image, req.url);
   }
 }
