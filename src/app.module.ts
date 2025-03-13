@@ -15,7 +15,7 @@ import { CityModule } from "./cities/cities.module";
 import { ScreenModule } from "./screen/screen.module";
 import { MovieModule } from "./movies/movies.module";
 import { ShowModule } from "./show/show.module";
-
+import { CronJobModule } from "./cron-job/cronJob.module";
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -27,6 +27,7 @@ import { ShowModule } from "./show/show.module";
     ScreenModule,
     MovieModule,
     ShowModule,
+    CronJobModule,
   ],
   controllers: [],
   providers: [],
@@ -60,7 +61,9 @@ export class AppModule implements NestModule {
         { path: "auth/request-reset", method: RequestMethod.POST },
         { path: "auth/verify-reset-token/:token", method: RequestMethod.GET },
         { path: "auth/set-password", method: RequestMethod.POST },
-        { path: "cities/list-cities", method: RequestMethod.GET }
+        { path: "cities/list-cities", method: RequestMethod.GET },
+        { path: "cron/sync", method: RequestMethod.GET },
+        { path: "cron/delete-movies", method: RequestMethod.GET }
       )
       .forRoutes("*");
   }
