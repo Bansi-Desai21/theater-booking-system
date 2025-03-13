@@ -5,6 +5,7 @@ import { CronJobService } from "./cronJob.service";
 import { Movie, MovieSchema } from "src/schemas/movies.schema";
 import { MongooseModule } from "@nestjs/mongoose";
 import { HttpModule } from "@nestjs/axios";
+import { CronJobController } from "./cronJob.controller";
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Movie.name, schema: MovieSchema }]),
@@ -12,5 +13,6 @@ import { HttpModule } from "@nestjs/axios";
     ScheduleModule.forRoot(),
   ],
   providers: [MovieService, CronJobService],
+  controllers: [CronJobController],
 })
 export class CronJobModule {}
