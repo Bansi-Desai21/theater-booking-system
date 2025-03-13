@@ -14,6 +14,7 @@ import { TheaterModule } from "./theater/theater.module";
 import { CityModule } from "./cities/cities.module";
 import { ScreenModule } from "./screen/screen.module";
 import { MovieModule } from "./movies/movies.module";
+import { ShowModule } from "./show/show.module";
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { MovieModule } from "./movies/movies.module";
     CityModule,
     ScreenModule,
     MovieModule,
+    ShowModule,
   ],
   controllers: [],
   providers: [],
