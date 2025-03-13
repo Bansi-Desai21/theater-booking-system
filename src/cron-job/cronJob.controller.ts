@@ -7,12 +7,14 @@ export class CronJobController {
 
   @Get("sync")
   async runSync() {
+    console.log("Triggered sync by cron-job.org");
     await this.cronJobService.syncMovies();
     return { message: "Sync triggered successfully!" };
   }
 
-  @Get("deleteMovies")
+  @Get("delete-movies")
   async deleteOldMovies() {
+    console.log("Triggered delete-movies by cron-job.org");
     await this.cronJobService.deleteOldMovies();
     return { message: "Sync triggered successfully!" };
   }
