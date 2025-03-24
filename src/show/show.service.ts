@@ -14,19 +14,56 @@ import {
   EnhancedHttpException,
   createResponse,
 } from "../utils/helper.response.function";
+import * as moment from "moment";
+import { Movie, MovieDocument } from "../schemas/movies.schema";
 
 @Injectable()
 export class ShowService {
   constructor(
     @InjectModel(Show.name) private readonly showModel: Model<ShowDocument>,
     @InjectModel(Theater.name)
-    private readonly theaterModel: Model<TheaterDocument>
+    private readonly theaterModel: Model<TheaterDocument>,
+    @InjectModel(Movie.name) private readonly movieModel: Model<MovieDocument>
   ) {}
 
   async addShow(createShowDto: CreateShowDto, ownerId: string, path: string) {
     try {
-      const { movieId, screenId, theaterId, startTime, endTime, ticketPrice } =
+      const { movieId, screenId, theaterId, showDate, startTime, ticketPrice } =
         createShowDto;
+
+      const parsedShowDate = moment(showDate).utc().startOf("day").toDate();
+
+      const parsedStartTime = moment(parsedShowDate)
+        .set({
+          hour: moment(startTime).hour(),
+          minute: moment(startTime).minute(),
+          second: 0,
+          millisecond: 0,
+        })
+        .toDate();
+
+      const movie = await this.movieModel.findById(movieId);
+      if (!movie) {
+        throw new NotFoundException({
+          statusCode: 404,
+          success: false,
+          message: "Movie not found.",
+          path,
+        });
+      }
+
+      if (!movie.duration) {
+        throw new BadRequestException({
+          statusCode: 400,
+          success: false,
+          message: "Movie duration is missing.",
+          path,
+        });
+      }
+
+      const parsedEndTime = moment(parsedStartTime)
+        .add(movie.duration, "minutes")
+        .toDate();
 
       const theater = await this.theaterModel.findOne({
         _id: new Types.ObjectId(theaterId),
@@ -43,15 +80,17 @@ export class ShowService {
 
       const overlappingShow = await this.showModel.findOne({
         screenId: new Types.ObjectId(screenId),
-        startTime: { $lt: endTime },
-        endTime: { $gt: startTime },
+        showDate: parsedShowDate,
+        startTime: { $lt: parsedEndTime },
+        endTime: { $gt: parsedStartTime },
       });
 
       if (overlappingShow) {
         throw new ConflictException({
           statusCode: 409,
           success: false,
-          message: "A show already exists in this time slot.",
+          message:
+            "A show already exists in this time slot for the selected screen.",
           path,
         });
       }
@@ -60,11 +99,14 @@ export class ShowService {
         movieId: new Types.ObjectId(movieId),
         screenId: new Types.ObjectId(screenId),
         theaterId: new Types.ObjectId(theaterId),
-        startTime,
-        endTime,
+        showDate: parsedShowDate,
+        startTime: parsedStartTime,
+        endTime: parsedEndTime,
         ticketPrice,
         status: ShowStatusEnum.ACTIVE,
+        createdBy: new Types.ObjectId(ownerId),
       });
+
       return createResponse(201, true, "Show added successfully!", show);
     } catch (error) {
       throw new EnhancedHttpException(
@@ -78,11 +120,16 @@ export class ShowService {
     }
   }
 
-  async listShows(theaterId: string, path: string) {
+  async listShows(ownerId: string, path: string, theaterId?: string) {
     try {
+      const filter: any = theaterId
+        ? { theaterId: new Types.ObjectId(theaterId) }
+        : { createdBy: new Types.ObjectId(ownerId) };
+
       const shows = await this.showModel
-        .find({ theaterId: new Types.ObjectId(theaterId) })
-        .populate("movieId screenId theaterId");
+        .find(filter)
+        .populate("movieId screenId theaterId")
+        .populate("createdBy", "-password");
       return createResponse(200, true, "Shows retrieved successfully!", shows);
     } catch (error) {
       throw new EnhancedHttpException(
@@ -124,14 +171,94 @@ export class ShowService {
 
   async updateShow(showId: string, updateShowDto: UpdateShowDto, path: string) {
     try {
+      const { showDate, startTime, ticketPrice } = updateShowDto;
+
+      const existingShow = await this.showModel.findById(showId);
+      if (!existingShow) {
+        throw new NotFoundException({
+          statusCode: 404,
+          success: false,
+          message: "Show not found.",
+          path,
+        });
+      }
+
+      let parsedShowDate = existingShow.showDate;
+      if (showDate) {
+        parsedShowDate = moment.utc(showDate).startOf("day").toDate();
+      }
+
+      let parsedStartTime = existingShow.startTime;
+      let parsedEndTime = existingShow.endTime;
+
+      if (startTime) {
+        const movie = await this.movieModel.findById(
+          existingShow.movieId || existingShow.movieId
+        );
+        if (!movie) {
+          throw new NotFoundException({
+            statusCode: 404,
+            success: false,
+            message: "Movie not found.",
+            path,
+          });
+        }
+
+        if (!movie.duration) {
+          throw new BadRequestException({
+            statusCode: 400,
+            success: false,
+            message: "Movie duration is missing.",
+            path,
+          });
+        }
+
+        parsedStartTime = moment
+          .utc(parsedShowDate)
+          .set({
+            hour: moment.utc(startTime).hour(),
+            minute: moment.utc(startTime).minute(),
+            second: 0,
+            millisecond: 0,
+          })
+          .toDate();
+
+        parsedEndTime = moment
+          .utc(parsedStartTime)
+          .add(movie.duration, "minutes")
+          .toDate();
+      }
+
+      const overlappingShow = await this.showModel.findOne({
+        screenId: existingShow.screenId,
+        showDate: parsedShowDate,
+        startTime: { $lt: parsedEndTime },
+        endTime: { $gt: parsedStartTime },
+        _id: { $ne: showId },
+      });
+
+      if (overlappingShow) {
+        throw new ConflictException({
+          statusCode: 409,
+          success: false,
+          message: "A show already exists in this time slot.",
+          path,
+        });
+      }
+
       const updatedShow = await this.showModel.findByIdAndUpdate(
-        new Types.ObjectId(showId),
-        updateShowDto,
+        showId,
+        {
+          ...(showDate && { showDate: parsedShowDate }),
+          ...(startTime && {
+            startTime: parsedStartTime,
+            endTime: parsedEndTime,
+          }),
+          ...(ticketPrice !== undefined && { ticketPrice }),
+        },
         { new: true }
       );
-      if (!updatedShow) {
-        throw new NotFoundException("Show not found");
-      }
+
       return createResponse(
         200,
         true,

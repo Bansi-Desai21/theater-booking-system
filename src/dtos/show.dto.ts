@@ -42,12 +42,12 @@ export class CreateShowDto {
   startTime: Date;
 
   @ApiProperty({
-    example: "2025-06-15T16:30:00.000Z",
-    description: "Show end time.",
+    example: "2025-06-15T00:00:00.000Z",
+    description: "Show date.",
   })
   @IsDate()
   @IsNotEmpty()
-  endTime: Date;
+  showDate: Date;
 
   @ApiProperty({ example: 250, description: "Ticket price for the show." })
   @IsNumber()
@@ -69,6 +69,14 @@ export class UpdateShowDto {
   })
   @IsDate()
   endTime?: Date;
+
+  @ApiProperty({
+    example: "2025-06-15T00:00:00.000Z",
+    description: "Show date.",
+  })
+  @IsDate()
+  @IsNotEmpty()
+  showDate: Date;
 
   @ApiProperty({ example: 300, description: "Updated ticket price." })
   @IsNumber()

@@ -20,10 +20,13 @@ export class Show {
   @Prop({ required: true, type: Types.ObjectId, ref: "Theater", index: true })
   theaterId: Types.ObjectId;
 
-  @Prop({ required: true })
+  @Prop({ required: true, type: Date })
+  showDate: Date;
+
+  @Prop({ required: true, type: Date })
   startTime: Date;
 
-  @Prop({ required: true })
+  @Prop({ required: true, type: Date })
   endTime: Date;
 
   @Prop({ required: true })
@@ -38,6 +41,10 @@ export class Show {
 
   @Prop({ required: false, default: false })
   isRemoved: Boolean;
+
+  @Prop({ type: Types.ObjectId, ref: "User", required: true })
+  createdBy: Types.ObjectId;
 }
 
 export const ShowSchema = SchemaFactory.createForClass(Show);
+ShowSchema.index({ screenId: 1, showDate: 1, startTime: 1, endTime: 1 }); // Optimized Indexing
