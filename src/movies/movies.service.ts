@@ -82,8 +82,6 @@ export class MovieService {
 
         await this.upsertMovie(details, { isNowShowing: true });
       }
-
-      this.logger.log(`Now Showing - Processed page ${page} of ${totalPages}`);
       page++;
     }
 
@@ -116,8 +114,6 @@ export class MovieService {
 
         await this.upsertMovie(details, { isUpcoming: true });
       }
-
-      this.logger.log(`Upcoming - Processed page ${page} of ${totalPages}`);
       page++;
     }
 
