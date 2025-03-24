@@ -8,6 +8,7 @@ import {
   Delete,
   Req,
   UseGuards,
+  Query,
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -15,6 +16,7 @@ import {
   ApiBearerAuth,
   ApiResponse,
   ApiBody,
+  ApiQuery,
 } from "@nestjs/swagger";
 import { ShowService } from "./show.service";
 import {
@@ -25,6 +27,7 @@ import {
 import { RolesGuard } from "../middlewares/roles.guard";
 import { Roles, Role } from "../utils/roles.enum";
 import { ShowStatusEnum } from "../schemas/shows.schema";
+import { IsOptional } from "class-validator";
 
 @ApiTags("Shows")
 @ApiBearerAuth()
@@ -53,11 +56,12 @@ export class ShowController {
 
   @UseGuards(RolesGuard)
   @Roles(Role.SubAdmin, Role.SuperAdmin)
-  @Get("list/:theaterId")
-  @ApiOperation({ summary: "List all shows for a theater" })
+  @Get("list")
+  @ApiOperation({ summary: "List all shows for a theater or by owner" })
   @ApiResponse({ status: 200, description: "Shows retrieved successfully." })
-  async listShows(@Param("theaterId") theaterId: string, @Req() req) {
-    return this.showService.listShows(theaterId, req.url);
+  @ApiQuery({ name: "theaterId", required: false })
+  async listShows(@Query("theaterId") theaterId: string, @Req() req) {
+    return this.showService.listShows(req["user"].id, req.url, theaterId);
   }
 
   @Get("details/:showId")
