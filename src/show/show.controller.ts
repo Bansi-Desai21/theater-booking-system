@@ -59,13 +59,48 @@ export class ShowController {
   @Get("list")
   @ApiOperation({ summary: "List all shows for a theater or by owner" })
   @ApiResponse({ status: 200, description: "Shows retrieved successfully." })
-  @ApiQuery({ name: "theaterId", required: false })
+  @ApiQuery({
+    name: "theaterId",
+    required: false,
+    type: String,
+    description: "Filter shows by theater ID",
+  })
+  @ApiQuery({
+    name: "screenId",
+    required: false,
+    type: String,
+    description: "Filter shows by screen ID",
+  })
+  @ApiQuery({
+    name: "movieId",
+    required: false,
+    type: String,
+    description: "Filter shows by movie ID",
+  })
+  @ApiQuery({
+    name: "startDate",
+    required: true,
+    type: Date,
+    description: "Filter start by start date",
+    example: "2025-06-17",
+  })
   async listShows(
     @Query("theaterId") theaterId: string,
     @Query("screenId") screenId: string,
+    @Query("movieId") movieId: string,
+    @Query("startDate") startDate: Date,
     @Req() req
   ) {
-    return this.showService.listShows(req.url, theaterId, screenId);
+    const ownerId = req.user.id;
+
+    return this.showService.listShows({
+      ownerId,
+      path: req.url,
+      startDate,
+      theaterId,
+      screenId,
+      movieId,
+    });
   }
 
   @Get("details/:showId")

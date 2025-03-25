@@ -38,8 +38,8 @@ export class ShowService {
         showEndDate,
       } = createShowDto;
 
-      const parsedShowDate = moment(showDate).utc().startOf("day").toDate();
-      const parsedShowEndDate = moment(showEndDate).utc().endOf("day").toDate();
+      const parsedShowDate = moment(showDate).startOf("day").utc().toDate();
+      const parsedShowEndDate = moment(showEndDate).endOf("day").utc().toDate();
 
       const parsedStartTime = moment(parsedShowDate)
         .set({
@@ -163,16 +163,46 @@ export class ShowService {
     }
   }
 
-  async listShows(path: string, screenId?: string, theaterId?: string) {
+  async listShows({
+    ownerId,
+    path,
+    startDate,
+    movieId,
+    theaterId,
+    screenId,
+  }: {
+    ownerId?: string;
+    path: string;
+    startDate: Date;
+    movieId?: string;
+    theaterId?: string;
+    screenId?: string;
+  }) {
     try {
-      const filter: any = theaterId
-        ? { theaterId: new Types.ObjectId(theaterId) }
-        : { screenId: new Types.ObjectId(screenId) };
+      const filter: any = { showDate: { $gte: startDate } };
+
+      if (ownerId) {
+        filter.createdBy = new Types.ObjectId(ownerId);
+      }
+
+      if (screenId) {
+        filter.screenId = new Types.ObjectId(screenId);
+      }
+
+      if (theaterId) {
+        filter.theaterId = new Types.ObjectId(theaterId);
+      }
+
+      if (movieId) {
+        filter.movieId = new Types.ObjectId(movieId);
+      }
 
       const shows = await this.showModel
         .find(filter)
         .populate("movieId screenId theaterId")
-        .populate("createdBy", "-password");
+        .populate("createdBy", "-password")
+        .sort({ showDate: 1, startTime: 1 });
+
       return createResponse(200, true, "Shows retrieved successfully!", shows);
     } catch (error) {
       throw new EnhancedHttpException(
@@ -214,7 +244,7 @@ export class ShowService {
 
   async updateShow(showId: string, updateShowDto: UpdateShowDto, path: string) {
     try {
-      const { showDate, startTime, ticketPrice } = updateShowDto;
+      const { ticketPrice, status } = updateShowDto;
 
       const existingShow = await this.showModel.findById(showId);
       if (!existingShow) {
@@ -226,79 +256,26 @@ export class ShowService {
         });
       }
 
-      let parsedShowDate = existingShow.showDate;
-      if (showDate) {
-        parsedShowDate = moment.utc(showDate).startOf("day").toDate();
+      const updateFields: any = {};
+
+      if (ticketPrice !== undefined) {
+        updateFields.ticketPrice = ticketPrice;
       }
-
-      let parsedStartTime = existingShow.startTime;
-      let parsedEndTime = existingShow.endTime;
-
-      if (startTime) {
-        const movie = await this.movieModel.findById(
-          existingShow.movieId || existingShow.movieId
-        );
-        if (!movie) {
-          throw new NotFoundException({
-            statusCode: 404,
-            success: false,
-            message: "Movie not found.",
-            path,
-          });
-        }
-
-        if (!movie.duration) {
-          throw new BadRequestException({
-            statusCode: 400,
-            success: false,
-            message: "Movie duration is missing.",
-            path,
-          });
-        }
-
-        parsedStartTime = moment
-          .utc(parsedShowDate)
-          .set({
-            hour: moment.utc(startTime).hour(),
-            minute: moment.utc(startTime).minute(),
-            second: 0,
-            millisecond: 0,
-          })
-          .toDate();
-
-        parsedEndTime = moment
-          .utc(parsedStartTime)
-          .add(movie.duration, "minutes")
-          .toDate();
+      if (status) {
+        updateFields.status = status;
       }
-
-      const overlappingShow = await this.showModel.findOne({
-        screenId: existingShow.screenId,
-        showDate: parsedShowDate,
-        startTime: { $lt: parsedEndTime },
-        endTime: { $gt: parsedStartTime },
-        _id: { $ne: showId },
-      });
-
-      if (overlappingShow) {
-        throw new ConflictException({
-          statusCode: 409,
+      if (Object.keys(updateFields).length === 0) {
+        throw new BadRequestException({
+          statusCode: 400,
           success: false,
-          message: "A show already exists in this time slot.",
+          message: "No valid fields to update.",
           path,
         });
       }
 
       const updatedShow = await this.showModel.findByIdAndUpdate(
         showId,
-        {
-          ...(showDate && { showDate: parsedShowDate }),
-          ...(startTime && {
-            startTime: parsedStartTime,
-            endTime: parsedEndTime,
-          }),
-          ...(ticketPrice !== undefined && { ticketPrice }),
-        },
+        updateFields,
         { new: true }
       );
 
