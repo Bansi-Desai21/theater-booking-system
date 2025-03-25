@@ -28,10 +28,18 @@ export class ShowService {
 
   async addShow(createShowDto: CreateShowDto, ownerId: string, path: string) {
     try {
-      const { movieId, screenId, theaterId, showDate, startTime, ticketPrice } =
-        createShowDto;
+      const {
+        movieId,
+        screenId,
+        theaterId,
+        showDate,
+        startTime,
+        ticketPrice,
+        showEndDate,
+      } = createShowDto;
 
       const parsedShowDate = moment(showDate).utc().startOf("day").toDate();
+      const parsedShowEndDate = moment(showEndDate).utc().endOf("day").toDate();
 
       const parsedStartTime = moment(parsedShowDate)
         .set({
@@ -80,7 +88,8 @@ export class ShowService {
 
       const overlappingShow = await this.showModel.findOne({
         screenId: new Types.ObjectId(screenId),
-        showDate: parsedShowDate,
+        showDate: { $lte: parsedShowEndDate },
+        showEndDate: { $gte: parsedShowDate },
         startTime: { $lt: parsedEndTime },
         endTime: { $gt: parsedStartTime },
       });
@@ -95,19 +104,53 @@ export class ShowService {
         });
       }
 
-      const show = await this.showModel.create({
-        movieId: new Types.ObjectId(movieId),
-        screenId: new Types.ObjectId(screenId),
-        theaterId: new Types.ObjectId(theaterId),
-        showDate: parsedShowDate,
-        startTime: parsedStartTime,
-        endTime: parsedEndTime,
-        ticketPrice,
-        status: ShowStatusEnum.ACTIVE,
-        createdBy: new Types.ObjectId(ownerId),
-      });
+      const showInstances: {
+        movieId: Types.ObjectId;
+        screenId: Types.ObjectId;
+        theaterId: Types.ObjectId;
+        showDate: Date;
+        showEndDate: Date;
+        startTime: Date;
+        endTime: Date;
+        ticketPrice: number;
+        status: ShowStatusEnum;
+        createdBy: Types.ObjectId;
+      }[] = [];
+      let currentDate = moment(parsedShowDate);
 
-      return createResponse(201, true, "Show added successfully!", show);
+      while (currentDate.isSameOrBefore(parsedShowEndDate, "day")) {
+        const dailyStartTime = moment(currentDate)
+          .set({
+            hour: moment(startTime).hour(),
+            minute: moment(startTime).minute(),
+            second: 0,
+            millisecond: 0,
+          })
+          .toDate();
+
+        const dailyEndTime = moment(dailyStartTime)
+          .add(movie.duration, "minutes")
+          .toDate();
+
+        showInstances.push({
+          movieId: new Types.ObjectId(movieId),
+          screenId: new Types.ObjectId(screenId),
+          theaterId: new Types.ObjectId(theaterId),
+          showDate: currentDate.toDate(),
+          showEndDate: parsedShowEndDate,
+          startTime: dailyStartTime,
+          endTime: dailyEndTime,
+          ticketPrice,
+          status: ShowStatusEnum.ACTIVE,
+          createdBy: new Types.ObjectId(ownerId),
+        });
+
+        currentDate.add(1, "day");
+      }
+
+      const savedShows = await this.showModel.insertMany(showInstances);
+
+      return createResponse(201, true, "Show added successfully!", savedShows);
     } catch (error) {
       throw new EnhancedHttpException(
         {
@@ -120,11 +163,11 @@ export class ShowService {
     }
   }
 
-  async listShows(ownerId: string, path: string, theaterId?: string) {
+  async listShows(path: string, screenId?: string, theaterId?: string) {
     try {
       const filter: any = theaterId
         ? { theaterId: new Types.ObjectId(theaterId) }
-        : { createdBy: new Types.ObjectId(ownerId) };
+        : { screenId: new Types.ObjectId(screenId) };
 
       const shows = await this.showModel
         .find(filter)

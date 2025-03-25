@@ -49,6 +49,14 @@ export class CreateShowDto {
   @IsNotEmpty()
   showDate: Date;
 
+  @ApiProperty({
+    example: "2025-06-24T00:00:00.000Z",
+    description: "Show end date.",
+  })
+  @IsDate()
+  @IsNotEmpty()
+  showEndDate: Date;
+
   @ApiProperty({ example: 250, description: "Ticket price for the show." })
   @IsNumber()
   @IsNotEmpty()

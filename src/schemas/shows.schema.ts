@@ -24,6 +24,9 @@ export class Show {
   showDate: Date;
 
   @Prop({ required: true, type: Date })
+  showEndDate: Date;
+
+  @Prop({ required: true, type: Date })
   startTime: Date;
 
   @Prop({ required: true, type: Date })
