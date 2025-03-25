@@ -60,8 +60,12 @@ export class ShowController {
   @ApiOperation({ summary: "List all shows for a theater or by owner" })
   @ApiResponse({ status: 200, description: "Shows retrieved successfully." })
   @ApiQuery({ name: "theaterId", required: false })
-  async listShows(@Query("theaterId") theaterId: string, @Req() req) {
-    return this.showService.listShows(req["user"].id, req.url, theaterId);
+  async listShows(
+    @Query("theaterId") theaterId: string,
+    @Query("screenId") screenId: string,
+    @Req() req
+  ) {
+    return this.showService.listShows(req.url, theaterId, screenId);
   }
 
   @Get("details/:showId")
