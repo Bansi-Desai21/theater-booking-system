@@ -241,10 +241,6 @@ export class MovieService {
       },
       { upsert: true }
     );
-
-    this.logger.log(
-      `Synced movie: ${details.title} (${details.original_language})`
-    );
   }
 
   async listMovies(path: string, query: any) {
@@ -385,18 +381,12 @@ export class MovieService {
     const ninetyDaysAgo = new Date();
     ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
 
-    const oldMovies = await this.movieModel.find({
+    const deleteResult = await this.movieModel.deleteMany({
       releaseDate: { $lt: ninetyDaysAgo },
     });
 
-    if (oldMovies.length > 0) {
-      await this.movieModel.deleteMany({
-        _id: { $in: oldMovies.map((m) => m._id) },
-      });
-    }
+    this.logger.log(`${deleteResult.deletedCount} old movies deleted.`);
 
-    return {
-      message: `${oldMovies.length} old movies deleted successfully.`,
-    };
+    return { message: "Old movies deleted successfully." }; // Minimized response
   }
 }
