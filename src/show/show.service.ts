@@ -179,7 +179,7 @@ export class ShowService {
     screenId?: string;
   }) {
     try {
-      const filter: any = { showDate: { $gte: startDate } };
+      const filter: any = { showDate: startDate };
 
       if (ownerId) {
         filter.createdBy = new Types.ObjectId(ownerId);
