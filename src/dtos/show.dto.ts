@@ -5,6 +5,7 @@ import {
   IsDate,
   IsNumber,
   IsEnum,
+  IsString,
 } from "class-validator";
 import { ShowStatusEnum } from "src/schemas/shows.schema";
 
@@ -65,26 +66,11 @@ export class CreateShowDto {
 
 export class UpdateShowDto {
   @ApiProperty({
-    example: "2025-06-16T14:00:00.000Z",
-    description: "Updated start time.",
+    example: "ACTIVE",
+    description: "Updated ticket price.",
   })
-  @IsDate()
-  startTime?: Date;
-
-  @ApiProperty({
-    example: "2025-06-16T16:30:00.000Z",
-    description: "Updated end time.",
-  })
-  @IsDate()
-  endTime?: Date;
-
-  @ApiProperty({
-    example: "2025-06-15T00:00:00.000Z",
-    description: "Show date.",
-  })
-  @IsDate()
-  @IsNotEmpty()
-  showDate: Date;
+  @IsString()
+  status?: string;
 
   @ApiProperty({ example: 300, description: "Updated ticket price." })
   @IsNumber()
