@@ -13,8 +13,8 @@ export class CronJobService {
   async syncMovies() {
     this.logger.log("Starting movie sync...");
     await Promise.all([
-      await this.movieService.syncNowShowing(),
-      await this.movieService.syncUpcoming(),
+      this.movieService.syncNowShowing(),
+      this.movieService.syncUpcoming(),
     ]);
     this.logger.log("Movie sync completed.");
   }
