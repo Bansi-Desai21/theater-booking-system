@@ -19,6 +19,9 @@ export class Screen {
 
   @Prop({ default: true })
   isActive: Boolean;
+
+  @Prop({ type: Types.ObjectId, ref: "SeatLayout" })
+  seatLayoutId: string;
 }
 
 export const ScreenSchema = SchemaFactory.createForClass(Screen);

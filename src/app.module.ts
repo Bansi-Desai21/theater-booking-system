@@ -16,6 +16,7 @@ import { ScreenModule } from "./screen/screen.module";
 import { MovieModule } from "./movies/movies.module";
 import { ShowModule } from "./show/show.module";
 import { CronJobModule } from "./cron-job/cronJob.module";
+import { SeatLayoutModule } from "./seat-layout/seatLayout.module";
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -27,6 +28,7 @@ import { CronJobModule } from "./cron-job/cronJob.module";
     ScreenModule,
     MovieModule,
     ShowModule,
+    SeatLayoutModule,
     CronJobModule,
   ],
   controllers: [],
