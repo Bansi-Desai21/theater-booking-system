@@ -42,9 +42,6 @@ export class Show {
   })
   status: ShowStatusEnum;
 
-  @Prop({ required: false, default: false })
-  isRemoved: Boolean;
-
   @Prop({ type: Types.ObjectId, ref: "User", required: true })
   createdBy: Types.ObjectId;
 }
