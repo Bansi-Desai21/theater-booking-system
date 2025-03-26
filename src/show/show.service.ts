@@ -69,6 +69,15 @@ export class ShowService {
         });
       }
 
+      if (new Date(showDate) < new Date(movie.releaseDate)) {
+        throw new BadRequestException({
+          statusCode: 400,
+          success: false,
+          message: "Show date cannot be before the movie release date.",
+          path,
+        });
+      }
+
       const parsedEndTime = moment(parsedStartTime)
         .add(movie.duration, "minutes")
         .toDate();
