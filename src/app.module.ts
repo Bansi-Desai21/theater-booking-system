@@ -16,7 +16,9 @@ import { ScreenModule } from "./screen/screen.module";
 import { MovieModule } from "./movies/movies.module";
 import { ShowModule } from "./show/show.module";
 import { CronJobModule } from "./cron-job/cronJob.module";
-import { SeatLayoutModule } from "./seat-layout/seatLayout.module";
+import { SeatLayoutModule } from "./seat-layout/seat-layout.module";
+import { UserDashboardService } from "./user-dashboard/user-dashboard.service";
+import { UserDashboardModule } from "./user-dashboard/user-dashboard.module";
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -30,9 +32,10 @@ import { SeatLayoutModule } from "./seat-layout/seatLayout.module";
     ShowModule,
     SeatLayoutModule,
     CronJobModule,
+    UserDashboardModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [UserDashboardService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

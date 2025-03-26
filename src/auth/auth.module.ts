@@ -7,7 +7,7 @@ import { User, UserSchema } from "../schemas/user.schema";
 import {
   PasswordReset,
   PasswordResetSchema,
-} from "../schemas/paawordReset.schema";
+} from "../schemas/paaword-reset.schema";
 import { CloudinaryModule } from "../cloudinary/cloudinary.module";
 @Module({
   imports: [

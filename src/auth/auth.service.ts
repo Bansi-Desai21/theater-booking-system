@@ -26,7 +26,7 @@ import {
 import * as jwt from "jsonwebtoken";
 import * as crypto from "crypto";
 import { sendEmail } from "../utils/email.service";
-import { PasswordReset } from "../schemas/paawordReset.schema";
+import { PasswordReset } from "../schemas/paaword-reset.schema";
 import { Role } from "../utils/roles.enum";
 import { CloudinaryService } from "../cloudinary/cloudinary.service";
 @Injectable()

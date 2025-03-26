@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
-import { SeatLayout, SeatLayoutDocument } from "../schemas/seatLayout.schema";
+import { SeatLayout, SeatLayoutDocument } from "../schemas/seat-layout.schema";
 import { Screen, ScreenDocument } from "../schemas/screen.schema";
 import {
   CreateSeatLayoutDto,

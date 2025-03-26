@@ -1,8 +1,8 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
-import { SeatLayout, SeatLayoutSchema } from "src/schemas/seatLayout.schema";
-import { SeatLayoutController } from "./seatLayout.controller";
-import { SeatLayoutService } from "./seatLayout.service";
+import { SeatLayout, SeatLayoutSchema } from "src/schemas/seat-layout.schema";
+import { SeatLayoutController } from "./seat-layout.controller";
+import { SeatLayoutService } from "./seat-layout.service";
 import { Screen, ScreenSchema } from "../schemas/screen.schema";
 
 @Module({
