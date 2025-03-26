@@ -11,13 +11,13 @@ export enum ShowStatusEnum {
 
 @Schema({ timestamps: true })
 export class Show {
-  @Prop({ required: true, type: Types.ObjectId, ref: "Movie", index: true })
+  @Prop({ required: true, type: Types.ObjectId, ref: "Movie" })
   movieId: Types.ObjectId;
 
-  @Prop({ required: true, type: Types.ObjectId, ref: "Screen", index: true })
+  @Prop({ required: true, type: Types.ObjectId, ref: "Screen" })
   screenId: Types.ObjectId;
 
-  @Prop({ required: true, type: Types.ObjectId, ref: "Theater", index: true })
+  @Prop({ required: true, type: Types.ObjectId, ref: "Theater" })
   theaterId: Types.ObjectId;
 
   @Prop({ required: true, type: Date })
@@ -47,4 +47,3 @@ export class Show {
 }
 
 export const ShowSchema = SchemaFactory.createForClass(Show);
-ShowSchema.index({ screenId: 1, showDate: 1, startTime: 1, endTime: 1 }); // Optimized Indexing
