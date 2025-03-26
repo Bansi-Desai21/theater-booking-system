@@ -344,8 +344,7 @@ export class ShowService {
         path: path,
       });
     }
-    show.isRemoved = true;
-    await show.save();
+    await this.showModel.findByIdAndDelete(showId);
     return {
       statusCode: 200,
       success: true,
