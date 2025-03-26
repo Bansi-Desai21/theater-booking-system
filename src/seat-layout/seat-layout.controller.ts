@@ -16,7 +16,7 @@ import {
   ApiResponse,
   ApiTags,
 } from "@nestjs/swagger";
-import { SeatLayoutService } from "./seatLayout.service";
+import { SeatLayoutService } from "./seat-layout.service";
 import {
   CreateSeatLayoutDto,
   UpdateSeatAvailabilityDto,
