@@ -11,20 +11,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Store API Key in Environment
+      - name: Debug GitHub Variable
         run: |
-          echo "CRON_API_KEY=${{ secrets.CRON_API_KEY }}" >> $GITHUB_ENV
-
-      - name: Debug API Key
-        run: |
-          echo "Stored API Key: $CRON_API_KEY"  
-
+          echo "Variable Value: ${{ vars.CRON_API_KEY }}"
 
       - name: Sync Movies (Debugging)
         run: |
           echo "Calling Sync Movies API..."
           RESPONSE=$(curl -s -w "\nHTTP_CODE:%{http_code}" -X GET "https://theater-booking-system.onrender.com/cron/sync" \
-          -H "Authorization: Bearer $CRON_API_KEY")
+          -H "Authorization: Bearer ${{ vars.CRON_API_KEY }}")
           echo "API Response: $RESPONSE"
           STATUS_CODE=$(echo "$RESPONSE" | grep "HTTP_CODE" | cut -d':' -f2)
           if [ "$STATUS_CODE" -ne 200 ]; then
@@ -36,7 +31,7 @@ jobs:
         run: |
           echo "Calling Delete Old Movies API..."
           RESPONSE=$(curl -s -w "\nHTTP_CODE:%{http_code}" -X GET "https://theater-booking-system.onrender.com/cron/delete-movies" \
-          -H "Authorization: Bearer $CRON_API_KEY")
+          -H "Authorization: Bearer ${{ vars.CRON_API_KEY }}")
           echo "API Response: $RESPONSE"
           STATUS_CODE=$(echo "$RESPONSE" | grep "HTTP_CODE" | cut -d':' -f2)
           if [ "$STATUS_CODE" -ne 200 ]; then
