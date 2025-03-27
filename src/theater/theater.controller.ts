@@ -23,6 +23,7 @@ import {
   ApiResponse,
   ApiTags,
 } from "@nestjs/swagger";
+import { query } from "express";
 
 @ApiTags("Theaters")
 @ApiBearerAuth()
@@ -166,11 +167,11 @@ export class TheaterController {
   })
   @ApiResponse({ status: 404, description: "Theater not found" })
   async updateTheaterStatus(@Param("theaterId") theaterId: string, @Req() req) {
-    return this.theaterService.updateTheaterStatus(
-      req["user"],
+    return this.theaterService.updateTheaterStatus({
+      user: req["user"],
       theaterId,
-      req.url
-    );
+      path: req.url,
+    });
   }
 
   @UseGuards(RolesGuard)

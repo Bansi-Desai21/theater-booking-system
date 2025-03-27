@@ -1,4 +1,4 @@
-name: Run Movie Cron Jobs 
+name: Run Movie Cron Jobs
 
 on:
   schedule:
@@ -11,10 +11,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Debug GitHub Secret (Avoid Masking)
-        run: |
-          echo "API Key (Split): $(echo '${{ secrets.CRON_API_KEY }}' | sed 's/./& /g')"
-
       - name: Sync Movies (Debugging)
         run: |
           echo "Calling Sync Movies API..."

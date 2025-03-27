@@ -13,17 +13,20 @@ import {
   createResponse,
   EnhancedHttpException,
 } from "../utils/helper.response.function";
-import { AuthUserdDto } from "../dtos/user.dto";
+import { AuthUserDto } from "../dtos/user.dto";
 import { Role } from "../utils/roles.enum";
 import { User, UserDocument } from "../../schemas/user.schema";
-import { Screen, ScreenDocument } from "schemas/screen.schema";
+import { Screen, ScreenDocument } from "../../schemas/screen.schema";
 import { CloudinaryService } from "../cloudinary/cloudinary.service";
+import { Show, ShowDocument, ShowStatusEnum } from "../../schemas/shows.schema";
 @Injectable()
 export class TheaterService {
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel(Theater.name) private theaterModel: Model<TheaterDocument>,
     @InjectModel(Screen.name) private screenModel: Model<ScreenDocument>,
+    @InjectModel(Show.name) private showModel: Model<ShowDocument>,
+
     private readonly cloudinaryService: CloudinaryService
   ) {}
 
@@ -123,7 +126,7 @@ export class TheaterService {
   async getAllTheaters(
     page: number,
     limit: number,
-    user: AuthUserdDto,
+    user: AuthUserDto,
     path: string,
     ownerId?: string
   ) {
@@ -278,11 +281,15 @@ export class TheaterService {
     }
   }
 
-  async updateTheaterStatus(
-    user: AuthUserdDto,
-    theaterId: string,
-    path: string
-  ) {
+  async updateTheaterStatus({
+    user,
+    theaterId,
+    path,
+  }: {
+    user: AuthUserDto;
+    theaterId: string;
+    path: string;
+  }) {
     try {
       const theater = await this.theaterModel.findById(theaterId);
 
@@ -304,6 +311,19 @@ export class TheaterService {
 
       theater.isActive = !theater.isActive;
       await theater.save();
+      if (!theater.isActive) {
+        await this.showModel.updateMany(
+          {
+            theaterId: new Types.ObjectId(theaterId),
+            status: { $ne: ShowStatusEnum.COMPLETED },
+          },
+          {
+            $set: {
+              status: ShowStatusEnum.CANCELLED,
+            },
+          }
+        );
+      }
 
       return createResponse(
         200,

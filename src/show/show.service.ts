@@ -231,7 +231,12 @@ export class ShowService {
         .findById(new Types.ObjectId(showId))
         .populate("movieId screenId theaterId");
       if (!show) {
-        throw new NotFoundException("Show not found");
+        throw new NotFoundException({
+          statusCode: 404,
+          success: false,
+          message: "Show not found.",
+          path: path,
+        });
       }
       return createResponse(
         200,
@@ -308,13 +313,35 @@ export class ShowService {
 
   async manageShowStatus(showId: string, status: ShowStatusEnum, path: string) {
     try {
+      const findShow = await this.showModel.findById({
+        _id: new Types.ObjectId(showId),
+      });
+
+      const CheckTheaterStatus = await this.theaterModel.findById({
+        _id: new Types.ObjectId(findShow?.theaterId),
+      });
+      if (!CheckTheaterStatus?.isActive && status == ShowStatusEnum.ACTIVE) {
+        throw new BadRequestException({
+          statusCode: 400,
+          success: false,
+          message:
+            "You cannot activate this show because the theater it belongs to is inactive.",
+          path: path,
+        });
+      }
       const updatedShow = await this.showModel.findByIdAndUpdate(
         new Types.ObjectId(showId),
         { status },
         { new: true }
       );
+
       if (!updatedShow) {
-        throw new NotFoundException("Show not found");
+        throw new NotFoundException({
+          statusCode: 404,
+          success: false,
+          message: "Show not found.",
+          path: path,
+        });
       }
       return createResponse(
         200,

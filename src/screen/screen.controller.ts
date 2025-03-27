@@ -129,10 +129,10 @@ export class ScreenController {
   })
   @ApiResponse({ status: 404, description: "Screen not found." })
   async toggleScreenStatus(@Param("id") screenId: string, @Req() req) {
-    return this.screenService.toggleScreenStatus(
-      screenId,
-      req["user"].id,
-      req.url
-    );
+    return this.screenService.toggleScreenStatus({
+      screenId: screenId,
+      ownerId: req["user"].id,
+      path: req.url,
+    });
   }
 }

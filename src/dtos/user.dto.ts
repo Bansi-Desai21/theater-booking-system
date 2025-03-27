@@ -120,7 +120,7 @@ export class SetPasswordDto {
   newPassword: string;
 }
 
-export class AuthUserdDto {
+export class AuthUserDto {
   @ApiProperty({ description: "User ID", example: "65d75f6e3a8b5a001f3c1234" })
   @IsMongoId()
   id: string;
