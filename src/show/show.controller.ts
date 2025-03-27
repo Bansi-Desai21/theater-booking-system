@@ -90,7 +90,7 @@ export class ShowController {
     @Query("startDate") startDate: Date,
     @Req() req
   ) {
-    const ownerId = req.user.id;
+    const ownerId = req.user.role === Role.SubAdmin ? req.user.id : null;
 
     return this.showService.listShows({
       ownerId,
