@@ -11,12 +11,30 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Sync Movies
+      - name: Debug API Key (Temporary)
         run: |
-          curl -X GET "https://theater-booking-system.onrender.com/cron/sync" \
-          -H "Authorization: Bearer ${{ secrets.CRON_API_KEY }}"
+          echo "GitHub Secret Key: ${{ secrets.CRON_API_KEY }}"
 
-      - name: Delete Old Movies
+      - name: Sync Movies (Debugging)
         run: |
-          curl -X GET "https://theater-booking-system.onrender.com/cron/delete-movies" \
-          -H "Authorization: Bearer ${{ secrets.CRON_API_KEY }}"
+          echo "Calling Sync Movies API..."
+          RESPONSE=$(curl -s -w "\nHTTP_CODE:%{http_code}" -X GET "https://theater-booking-system.onrender.com/cron/sync" \
+          -H "Authorization: Bearer ${{ secrets.CRON_API_KEY }}")
+          echo "API Response: $RESPONSE"
+          STATUS_CODE=$(echo "$RESPONSE" | grep "HTTP_CODE" | cut -d':' -f2)
+          if [ "$STATUS_CODE" -ne 200 ]; then
+            echo "❌ Sync Movies API failed with status code: $STATUS_CODE"
+            exit 1
+          fi
+
+      - name: Delete Old Movies (Debugging)
+        run: |
+          echo "Calling Delete Old Movies API..."
+          RESPONSE=$(curl -s -w "\nHTTP_CODE:%{http_code}" -X GET "https://theater-booking-system.onrender.com/cron/delete-movies" \
+          -H "Authorization: Bearer ${{ secrets.CRON_API_KEY }}")
+          echo "API Response: $RESPONSE"
+          STATUS_CODE=$(echo "$RESPONSE" | grep "HTTP_CODE" | cut -d':' -f2)
+          if [ "$STATUS_CODE" -ne 200 ]; then
+            echo "❌ Delete Old Movies API failed with status code: $STATUS_CODE"
+            exit 1
+          fi
