@@ -8,6 +8,7 @@ export class CronJobController {
   constructor(private readonly cronJobService: CronJobService) {}
 
   private validateApiKey(headers: any) {
+    console.log("Received API Key:", headers, this.API_KEY);
     if (headers["authorization"] !== `Bearer ${this.API_KEY}`) {
       throw new ForbiddenException("Invalid API Key");
     }
