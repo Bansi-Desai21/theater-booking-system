@@ -40,8 +40,6 @@ export class MovieController {
     return this.movieService.syncMovies(req.url);
   }
 
-  @UseGuards(RolesGuard)
-  @Roles(Role.SuperAdmin, Role.SubAdmin)
   @Get("list")
   @ApiOperation({
     summary: "Get movies based on filters (Category, Language) with pagination",

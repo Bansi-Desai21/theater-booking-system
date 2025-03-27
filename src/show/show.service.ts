@@ -179,6 +179,7 @@ export class ShowService {
     movieId,
     theaterId,
     screenId,
+    isPublic,
   }: {
     ownerId?: string;
     path: string;
@@ -186,24 +187,19 @@ export class ShowService {
     movieId?: string;
     theaterId?: string;
     screenId?: string;
+    isPublic?: Boolean;
   }) {
     try {
       const filter: any = { showDate: startDate };
 
-      if (ownerId) {
-        filter.createdBy = new Types.ObjectId(ownerId);
-      }
+      if (theaterId) filter["theaterId"] = new Types.ObjectId(theaterId);
+      if (screenId) filter["screenId"] = new Types.ObjectId(screenId);
+      if (movieId) filter["movieId"] = new Types.ObjectId(movieId);
 
-      if (screenId) {
-        filter.screenId = new Types.ObjectId(screenId);
-      }
-
-      if (theaterId) {
-        filter.theaterId = new Types.ObjectId(theaterId);
-      }
-
-      if (movieId) {
-        filter.movieId = new Types.ObjectId(movieId);
+      if (isPublic) {
+        filter["status"] = ShowStatusEnum.ACTIVE;
+      } else if (ownerId) {
+        filter["createdBy"] = new Types.ObjectId(ownerId);
       }
 
       const shows = await this.showModel

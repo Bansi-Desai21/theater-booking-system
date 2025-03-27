@@ -48,6 +48,7 @@ export class UserDashboardController {
       theaterId,
       screenId,
       movieId,
+      isPublic: !req.user,
     });
   }
 }

@@ -68,7 +68,8 @@ export class AppModule implements NestModule {
         { path: "cities/list-cities", method: RequestMethod.GET },
         { path: "cron/sync", method: RequestMethod.GET },
         { path: "cron/delete-movies", method: RequestMethod.GET },
-        { path: "user-dashboard/list-shows", method: RequestMethod.GET }
+        { path: "user-dashboard/list-shows", method: RequestMethod.GET },
+        { path: "movies/list", method: RequestMethod.GET }
       )
       .forRoutes("*");
   }
