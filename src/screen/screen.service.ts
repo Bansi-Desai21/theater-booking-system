@@ -15,12 +15,14 @@ import {
   createResponse,
   EnhancedHttpException,
 } from "../utils/helper.response.function";
+import { Show, ShowDocument, ShowStatusEnum } from "../../schemas/shows.schema";
 
 @Injectable()
 export class ScreenService {
   constructor(
     @InjectModel(Screen.name) private screenModel: Model<ScreenDocument>,
-    @InjectModel(Theater.name) private theaterModel: Model<TheaterDocument>
+    @InjectModel(Theater.name) private theaterModel: Model<TheaterDocument>,
+    @InjectModel(Show.name) private showModel: Model<ShowDocument>
   ) {}
 
   async addScreen(
@@ -159,6 +161,7 @@ export class ScreenService {
       const theaterData = await this.theaterModel
         .findById(theaterId)
         .populate("city")
+        .populate("seatLayoutId")
         .populate("ownerId", "-password");
       return createResponse(200, true, "Screens retrieved successfully!", {
         screens,
@@ -280,7 +283,15 @@ export class ScreenService {
     }
   }
 
-  async toggleScreenStatus(screenId: string, ownerId: string, path: string) {
+  async toggleScreenStatus({
+    screenId,
+    ownerId,
+    path,
+  }: {
+    screenId: string;
+    ownerId: string;
+    path: string;
+  }) {
     try {
       const screen = await this.screenModel.findById(screenId).populate({
         path: "theaterId",
@@ -308,7 +319,19 @@ export class ScreenService {
 
       screen.isActive = !screen.isActive;
       await screen.save();
-
+      if (!screen.isActive) {
+        await this.showModel.updateMany(
+          {
+            screenId: new Types.ObjectId(screenId),
+            status: { $ne: ShowStatusEnum.COMPLETED },
+          },
+          {
+            $set: {
+              status: ShowStatusEnum.CANCELLED,
+            },
+          }
+        );
+      }
       return createResponse(
         200,
         true,

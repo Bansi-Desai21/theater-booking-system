@@ -16,7 +16,7 @@ import {
   UpdateUserDto,
   SetPasswordDto,
   SubAdminDto,
-  AuthUserdDto,
+  AuthUserDto,
 } from "../dtos/user.dto";
 import { User, UserDocument } from "../../schemas/user.schema";
 import {
@@ -411,7 +411,7 @@ export class AuthService {
   }
 
   async updateTheaterOwnerStatus(
-    user: AuthUserdDto,
+    user: AuthUserDto,
     theaterId: string,
     path: string
   ) {
