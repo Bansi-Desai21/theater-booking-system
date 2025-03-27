@@ -14,9 +14,9 @@ jobs:
       - name: Sync Movies
         run: |
           curl -X GET "https://theater-booking-system.onrender.com/cron/sync" \
-          -H "Authorization: Bearer ${{ secrets.SYNC_API_KEY }}"
+          -H "Authorization: Bearer ${{ secrets.CRON_API_KEY }}"
 
       - name: Delete Old Movies
         run: |
           curl -X GET "https://theater-booking-system.onrender.com/cron/delete-movies" \
-          -H "Authorization: Bearer ${{ secrets.SYNC_API_KEY }}"
+          -H "Authorization: Bearer ${{ secrets.CRON_API_KEY }}"

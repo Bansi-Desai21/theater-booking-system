@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Types, Document } from "mongoose";
-import { SeatType } from "../utils/seats.enum";
+import { SeatType } from "../src/utils/seats.enum";
 
 export type SeatLayoutDocument = SeatLayout & Document;
 

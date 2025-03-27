@@ -9,8 +9,8 @@ import {
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
 import { CreateScreenDto, UpdateScreenDto } from "../dtos/screen.dto";
-import { Screen, ScreenDocument } from "../schemas/screen.schema";
-import { Theater, TheaterDocument } from "../schemas/theater.schema";
+import { Screen, ScreenDocument } from "../../schemas/screen.schema";
+import { Theater, TheaterDocument } from "../../schemas/theater.schema";
 import {
   createResponse,
   EnhancedHttpException,

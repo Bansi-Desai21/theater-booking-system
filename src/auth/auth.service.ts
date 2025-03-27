@@ -18,7 +18,7 @@ import {
   SubAdminDto,
   AuthUserdDto,
 } from "../dtos/user.dto";
-import { User, UserDocument } from "../schemas/user.schema";
+import { User, UserDocument } from "../../schemas/user.schema";
 import {
   createResponse,
   EnhancedHttpException,
@@ -26,7 +26,7 @@ import {
 import * as jwt from "jsonwebtoken";
 import * as crypto from "crypto";
 import { sendEmail } from "../utils/email.service";
-import { PasswordReset } from "../schemas/paaword-reset.schema";
+import { PasswordReset } from "../../schemas/paaword-reset.schema";
 import { Role } from "../utils/roles.enum";
 import { CloudinaryService } from "../cloudinary/cloudinary.service";
 @Injectable()

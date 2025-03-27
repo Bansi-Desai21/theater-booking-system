@@ -1,6 +1,6 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
-import { City, CitySchema } from "../schemas/cities.schema";
+import { City, CitySchema } from "../../schemas/cities.schema";
 import { CitiesService } from "./cities.service";
 import { CityController } from "./cities.controller";
 

@@ -17,7 +17,6 @@ import { MovieModule } from "./movies/movies.module";
 import { ShowModule } from "./show/show.module";
 import { CronJobModule } from "./cron-job/cronJob.module";
 import { SeatLayoutModule } from "./seat-layout/seat-layout.module";
-import { UserDashboardService } from "./user-dashboard/user-dashboard.service";
 import { UserDashboardModule } from "./user-dashboard/user-dashboard.module";
 @Module({
   imports: [
@@ -35,7 +34,7 @@ import { UserDashboardModule } from "./user-dashboard/user-dashboard.module";
     UserDashboardModule,
   ],
   controllers: [],
-  providers: [UserDashboardService],
+  providers: [],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
@@ -68,7 +67,8 @@ export class AppModule implements NestModule {
         { path: "auth/set-password", method: RequestMethod.POST },
         { path: "cities/list-cities", method: RequestMethod.GET },
         { path: "cron/sync", method: RequestMethod.GET },
-        { path: "cron/delete-movies", method: RequestMethod.GET }
+        { path: "cron/delete-movies", method: RequestMethod.GET },
+        { path: "user-dashboard/list-shows", method: RequestMethod.GET }
       )
       .forRoutes("*");
   }

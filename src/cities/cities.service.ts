@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
-import { City } from "../schemas/cities.schema";
+import { City } from "../../schemas/cities.schema";
 import {
   createResponse,
   EnhancedHttpException,

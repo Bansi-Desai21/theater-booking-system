@@ -7,15 +7,15 @@ import {
 } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
-import { Show, ShowDocument, ShowStatusEnum } from "../schemas/shows.schema";
+import { Show, ShowDocument, ShowStatusEnum } from "../../schemas/shows.schema";
 import { CreateShowDto, UpdateShowDto } from "../dtos/show.dto";
-import { Theater, TheaterDocument } from "../schemas/theater.schema";
+import { Theater, TheaterDocument } from "../../schemas/theater.schema";
 import {
   EnhancedHttpException,
   createResponse,
 } from "../utils/helper.response.function";
 import * as moment from "moment";
-import { Movie, MovieDocument } from "../schemas/movies.schema";
+import { Movie, MovieDocument } from "../../schemas/movies.schema";
 
 @Injectable()
 export class ShowService {
