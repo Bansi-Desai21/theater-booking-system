@@ -1,4 +1,9 @@
-import { HttpStatus, Injectable, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
 import {
@@ -35,7 +40,15 @@ export class SeatLayoutService {
           message: "Screen not founds.",
           path,
         });
-
+      const totalSeats = dto.rows * dto.cols;
+      if (totalSeats > screen.totalSeats) {
+        throw new BadRequestException({
+          statusCode: 400,
+          success: false,
+          message: `Seat layout exceeds the maximum allowed seats (${screen.totalSeats}).`,
+          path,
+        });
+      }
       const seatMap = new Map();
 
       for (const seat of dto.seats || []) {
