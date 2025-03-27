@@ -2,9 +2,9 @@ import { Module } from "@nestjs/common";
 import { ShowService } from "./show.service";
 import { ShowController } from "./show.controller";
 import { MongooseModule } from "@nestjs/mongoose";
-import { Show, ShowSchema } from "../schemas/shows.schema";
-import { Theater, TheaterSchema } from "../schemas/theater.schema";
-import { Movie, MovieSchema } from "../schemas/movies.schema";
+import { Show, ShowSchema } from "../../schemas/shows.schema";
+import { Theater, TheaterSchema } from "../../schemas/theater.schema";
+import { Movie, MovieSchema } from "../../schemas/movies.schema";
 
 @Module({
   imports: [
@@ -16,5 +16,6 @@ import { Movie, MovieSchema } from "../schemas/movies.schema";
   ],
   providers: [ShowService],
   controllers: [ShowController],
+  exports: [ShowService],
 })
 export class ShowModule {}

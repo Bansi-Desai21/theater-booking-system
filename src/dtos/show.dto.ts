@@ -7,7 +7,7 @@ import {
   IsEnum,
   IsString,
 } from "class-validator";
-import { ShowStatusEnum } from "src/schemas/shows.schema";
+import { ShowStatusEnum } from "schemas/shows.schema";
 
 export class CreateShowDto {
   @ApiProperty({

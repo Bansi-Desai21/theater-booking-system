@@ -2,8 +2,8 @@ import { Module } from "@nestjs/common";
 import { ScreenController } from "./screen.controller";
 import { ScreenService } from "./screen.service";
 import { MongooseModule } from "@nestjs/mongoose";
-import { Screen, ScreenSchema } from "../schemas/screen.schema";
-import { Theater, TheaterSchema } from "src/schemas/theater.schema";
+import { Screen, ScreenSchema } from "../../schemas/screen.schema";
+import { Theater, TheaterSchema } from "schemas/theater.schema";
 
 @Module({
   imports: [

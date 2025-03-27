@@ -26,8 +26,7 @@ import {
 } from "../dtos/show.dto";
 import { RolesGuard } from "../middlewares/roles.guard";
 import { Roles, Role } from "../utils/roles.enum";
-import { ShowStatusEnum } from "../schemas/shows.schema";
-import { IsOptional } from "class-validator";
+import { ShowStatusEnum } from "../../schemas/shows.schema";
 
 @ApiTags("Shows")
 @ApiBearerAuth()

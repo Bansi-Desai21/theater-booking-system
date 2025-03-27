@@ -9,7 +9,7 @@ import {
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { firstValueFrom } from "rxjs";
-import { Movie, MovieDocument } from "../schemas/movies.schema";
+import { Movie, MovieDocument } from "../../schemas/movies.schema";
 import {
   createResponse,
   EnhancedHttpException,

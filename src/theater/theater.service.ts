@@ -8,15 +8,15 @@ import {
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
 import { CreateTheaterDto, UpdateTheaterDto } from "../dtos/theater.dto";
-import { Theater, TheaterDocument } from "../schemas/theater.schema";
+import { Theater, TheaterDocument } from "../../schemas/theater.schema";
 import {
   createResponse,
   EnhancedHttpException,
 } from "../utils/helper.response.function";
 import { AuthUserdDto } from "../dtos/user.dto";
 import { Role } from "../utils/roles.enum";
-import { User, UserDocument } from "../schemas/user.schema";
-import { Screen, ScreenDocument } from "src/schemas/screen.schema";
+import { User, UserDocument } from "../../schemas/user.schema";
+import { Screen, ScreenDocument } from "schemas/screen.schema";
 import { CloudinaryService } from "../cloudinary/cloudinary.service";
 @Injectable()
 export class TheaterService {
