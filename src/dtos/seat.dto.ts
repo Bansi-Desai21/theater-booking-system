@@ -76,12 +76,11 @@ export class CreateSeatLayoutDto {
 
   @ApiProperty({
     example: [
-      { row: 2, type: "vip", price: 300, isAvailable: true },
+      { row: 2, type: "vip", price: 300 },
       {
         row: 3,
         type: "premium",
         price: 200,
-        isAvailable: true,
       },
     ],
     description: "List of seats with custom types and prices.",
@@ -129,13 +128,11 @@ export class UpdateSeatLayoutDto {
 
   @ApiProperty({
     example: [
-      { row: "A", seatNumber: 1, type: "vip", price: 300, isAvailable: false },
+      { row: 1, type: "vip", price: 300 },
       {
-        row: "B",
-        seatNumber: 2,
+        row: 2,
         type: "premium",
         price: 200,
-        isAvailable: true,
       },
     ],
     description: "Updated list of seats.",

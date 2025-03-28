@@ -143,12 +143,38 @@ export class SeatLayoutService {
           path,
         });
       }
+      const seats = seatLayout.seats;
 
+      const seatTypeMap = new Map();
+
+      seats.forEach(({ row, type, price, isAvailable }) => {
+        if (!seatTypeMap.has(type)) {
+          seatTypeMap.set(type, {
+            rowSet: new Set(),
+            type,
+            price,
+            isAvailable,
+          });
+        }
+        seatTypeMap.get(type).rowSet.add(row);
+      });
+
+      const seatTypes = {};
+      seatTypeMap.forEach((value, key) => {
+        seatTypes[key] = {
+          rowCount: value.rowSet.size,
+          type: value.type,
+          price: value.price,
+          isAvailable: value.isAvailable,
+        };
+      });
+
+      const seatLayoutRes = { seatLayout, seatTypes };
       return createResponse(
         200,
         true,
         "Seat layout fetched successfully.",
-        seatLayout
+        seatLayoutRes
       );
     } catch (error) {
       throw new EnhancedHttpException(
@@ -178,53 +204,67 @@ export class SeatLayoutService {
         });
       }
 
-      // Update row and column counts
       if (dto.rows) seatLayout.rows = dto.rows;
       if (dto.cols) seatLayout.cols = dto.cols;
+      if (dto.defaultRegularPrice)
+        seatLayout.defaultRegularPrice = dto.defaultRegularPrice;
 
-      // Create a seat map from the existing seats
-      const seatMap = new Map();
-      for (const seat of seatLayout.seats) {
-        const key = `${seat.row}-${seat.seatNumber}`;
-        seatMap.set(key, seat);
+      const { rows, cols, defaultRegularPrice, seats: tiers = [] } = seatLayout;
+
+      const tierPriority = { vip: 3, premium: 2, regular: 1 };
+      const sortedTiers = (dto.seats || []).sort(
+        (a, b) => (tierPriority[b.type] ?? 0) - (tierPriority[a.type] ?? 0)
+      );
+
+      const rowTypes: { type: SeatType; price: number }[] = Array(rows)
+        .fill(null)
+        .map(() => ({
+          type: SeatType.REGULAR,
+          price: defaultRegularPrice || seatLayout.defaultRegularPrice,
+        }));
+
+      let currentRow = rows;
+      for (const { row: count, type, price } of sortedTiers) {
+        for (let i = currentRow - count; i < currentRow; i++) {
+          rowTypes[i] = { type, price };
+        }
+        currentRow -= count;
       }
 
-      // Merge incoming updates into the seatMap
-      for (const seat of dto.seats || []) {
-        const key = `${seat.row}-${seat.seatNumber}`;
-        seatMap.set(key, { ...seat });
+      function getRowLabel(index: number): string {
+        let label = "";
+        while (index >= 0) {
+          label = String.fromCharCode((index % 26) + 65) + label;
+          index = Math.floor(index / 26) - 1;
+        }
+        return label;
       }
 
-      // Regenerate the full seat layout
-      const seats: {
+      const newSeats: {
         row: string;
         seatNumber: number;
         type: SeatType;
         price: number;
         isAvailable: boolean;
       }[] = [];
+      for (let r = 0; r < rows; r++) {
+        const rowLabel = getRowLabel(r);
+        const { type, price } = rowTypes[r];
 
-      const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-      for (let r = 0; r < seatLayout.rows; r++) {
-        const rowLabel = alphabet[r];
-        for (let c = 1; c <= seatLayout.cols; c++) {
-          const key = `${rowLabel}-${c}`;
-          if (seatMap.has(key)) {
-            seats.push(seatMap.get(key));
-          } else {
-            seats.push({
-              row: rowLabel,
-              seatNumber: c,
-              type: SeatType.REGULAR,
-              price: dto.defaultRegularPrice || seatLayout.defaultRegularPrice,
-              isAvailable: true,
-            });
-          }
+        for (let c = 1; c <= cols; c++) {
+          newSeats.push({
+            row: rowLabel,
+            seatNumber: c,
+            type,
+            price,
+            isAvailable: true,
+          });
         }
       }
 
-      seatLayout.seats = seats;
+      seatLayout.seats = newSeats;
+      seatLayout.rows = rows;
+      seatLayout.cols = cols;
       await seatLayout.save();
 
       return createResponse(
