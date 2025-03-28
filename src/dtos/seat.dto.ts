@@ -33,13 +33,6 @@ export class CreateSeatDto {
   @ApiProperty({ example: 300, description: "Price of the seat." })
   @IsNumber()
   price: number;
-
-  @ApiProperty({
-    example: true,
-    description: "Availability status of the seat.",
-  })
-  @IsBoolean()
-  isAvailable: boolean;
 }
 
 export class CreateSeatLayoutDto {
@@ -83,8 +76,13 @@ export class CreateSeatLayoutDto {
 
   @ApiProperty({
     example: [
-      { row: 1, seatNumber: 1, type: "vip", price: 300, isAvailable: true },
-      { row: 2, seatNumber: 1, type: "premium", price: 200, isAvailable: true },
+      { row: 2, type: "vip", price: 300, isAvailable: true },
+      {
+        row: 3,
+        type: "premium",
+        price: 200,
+        isAvailable: true,
+      },
     ],
     description: "List of seats with custom types and prices.",
   })

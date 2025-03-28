@@ -139,25 +139,34 @@ export class ScreenService {
     }
   }
 
-  async listScreens(
-    theaterId: string,
-    page: number,
-    limit: number,
-    path: string
-  ) {
+  async listScreens({
+    theaterId,
+    page,
+    limit,
+    isComplete,
+    path,
+  }: {
+    theaterId: string;
+    page: number;
+    limit: number;
+    isComplete?: Boolean;
+    path: string;
+  }) {
     try {
       const skip = (page - 1) * limit;
+      let query = {
+        theaterId: new Types.ObjectId(theaterId),
+        isRemoved: false,
+      };
+      if (isComplete) query["isComplete"] = true;
 
       const [screens, total] = await Promise.all([
         this.screenModel
-          .find({ theaterId: new Types.ObjectId(theaterId), isRemoved: false })
+          .find(query)
           .populate("seatLayoutId")
           .skip(skip)
           .limit(limit),
-        this.screenModel.countDocuments({
-          theaterId: new Types.ObjectId(theaterId),
-          isRemoved: false,
-        }),
+        this.screenModel.countDocuments(query),
       ]);
       const theaterData = await this.theaterModel
         .findById(theaterId)

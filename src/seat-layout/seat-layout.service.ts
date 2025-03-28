@@ -33,27 +33,13 @@ export class SeatLayoutService {
   async createSeatLayout(dto: CreateSeatLayoutDto, path: string) {
     try {
       const screen = await this.screenModel.findById(dto.screenId);
-      if (!screen)
+      if (!screen) {
         throw new NotFoundException({
           statusCode: 404,
           success: false,
-          message: "Screen not founds.",
+          message: "Screen not found.",
           path,
         });
-      const totalSeats = dto.rows * dto.cols;
-      if (totalSeats > screen.totalSeats) {
-        throw new BadRequestException({
-          statusCode: 400,
-          success: false,
-          message: `Seat layout exceeds the maximum allowed seats (${screen.totalSeats}).`,
-          path,
-        });
-      }
-      const seatMap = new Map();
-
-      for (const seat of dto.seats || []) {
-        const key = `${seat.row}-${seat.seatNumber}`;
-        seatMap.set(key, seat);
       }
 
       const seats: {
@@ -64,35 +50,65 @@ export class SeatLayoutService {
         isAvailable: boolean;
       }[] = [];
       const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      const { rows, cols, defaultRegularPrice, seats: tiers = [] } = dto;
 
-      for (let r = 0; r < dto.rows; r++) {
-        const rowLabel = alphabet[r];
-        for (let c = 1; c <= dto.cols; c++) {
-          const key = `${rowLabel}-${c}`;
-          if (seatMap.has(key)) {
-            seats.push(seatMap.get(key));
-          } else {
-            seats.push({
-              row: rowLabel,
-              seatNumber: c,
-              type: SeatType.REGULAR,
-              price: dto.defaultRegularPrice,
-              isAvailable: true,
-            });
-          }
+      // Sort seats from bottom: VIP -> Premium -> Regular
+      const tierPriority = { vip: 3, premium: 2, regular: 1 };
+      const sortedTiers = tiers.sort(
+        (a, b) => (tierPriority[b.type] ?? 0) - (tierPriority[a.type] ?? 0)
+      );
+
+      const rowTypes: { type: SeatType; price: number }[] = Array(rows)
+        .fill(null)
+        .map(() => ({
+          type: SeatType.REGULAR,
+          price: defaultRegularPrice,
+        }));
+
+      let currentRow = rows;
+      for (const { row: count, type, price } of sortedTiers) {
+        for (let i = currentRow - count; i < currentRow; i++) {
+          rowTypes[i] = { type, price };
+        }
+        currentRow -= count;
+      }
+
+      function getRowLabel(index: number): string {
+        let label = "";
+        while (index >= 0) {
+          label = String.fromCharCode((index % 26) + 65) + label;
+          index = Math.floor(index / 26) - 1;
+        }
+        return label;
+      }
+
+      for (let r = 0; r < rows; r++) {
+        const rowLabel = getRowLabel(r);
+        const { type, price } = rowTypes[r];
+
+        for (let c = 1; c <= cols; c++) {
+          seats.push({
+            row: rowLabel,
+            seatNumber: c,
+            type,
+            price,
+            isAvailable: true,
+          });
         }
       }
 
       const seatLayout = await this.seatLayoutModel.create({
         screenId: new Types.ObjectId(dto.screenId),
-        theaterId: new Types.ObjectId(dto.theaterId),
-        defaultRegularPrice: dto.defaultRegularPrice,
-        rows: dto.rows,
-        cols: dto.cols,
+        theaterId: new Types.ObjectId(screen.theaterId),
+        defaultRegularPrice,
+        rows,
+        cols,
         seats,
       });
 
       screen.seatLayoutId = seatLayout._id as unknown as string;
+      screen.totalSeats = seatLayout.seats.length;
+      screen.isComplete = true;
       await screen.save();
 
       return createResponse(

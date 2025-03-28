@@ -83,16 +83,18 @@ export class ScreenController {
   @ApiResponse({ status: 200, description: "Screens retrieved successfully." })
   async listScreens(
     @Param("theaterId") theaterId: string,
+    @Query("isComplete") isComplete: Boolean,
     @Query("page") page = 1,
     @Query("limit") limit = 10,
     @Req() req
   ) {
-    return this.screenService.listScreens(
+    return this.screenService.listScreens({
       theaterId,
-      Number(page),
-      Number(limit),
-      req.url
-    );
+      page: Number(page),
+      limit: Number(limit),
+      path: req.url,
+      isComplete,
+    });
   }
 
   @UseGuards(RolesGuard)
