@@ -95,6 +95,16 @@ export class ShowService {
         });
       }
 
+      if (!theater.isActive) {
+        throw new BadRequestException({
+          statusCode: 400,
+          success: false,
+          message:
+            "Only active theaters can have new shows scheduled. Please reactivate the theater to proceed.",
+          path,
+        });
+      }
+
       const overlappingShow = await this.showModel.findOne({
         screenId: new Types.ObjectId(screenId),
         showDate: { $lte: parsedShowEndDate },

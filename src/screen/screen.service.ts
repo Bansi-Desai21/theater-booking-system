@@ -151,6 +151,7 @@ export class ScreenService {
       const [screens, total] = await Promise.all([
         this.screenModel
           .find({ theaterId: new Types.ObjectId(theaterId), isRemoved: false })
+          .populate("seatLayoutId")
           .skip(skip)
           .limit(limit),
         this.screenModel.countDocuments({
@@ -161,7 +162,6 @@ export class ScreenService {
       const theaterData = await this.theaterModel
         .findById(theaterId)
         .populate("city")
-        .populate("seatLayoutId")
         .populate("ownerId", "-password");
       return createResponse(200, true, "Screens retrieved successfully!", {
         screens,
