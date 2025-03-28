@@ -7,12 +7,14 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { HttpModule } from "@nestjs/axios";
 import { CronJobController } from "./cronJob.controller";
 import { CloudinaryModule } from "../cloudinary/cloudinary.module";
+import { ShowModule } from "../show/show.module";
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Movie.name, schema: MovieSchema }]),
     HttpModule,
     ScheduleModule.forRoot(),
     CloudinaryModule,
+    ShowModule,
   ],
   providers: [MovieService, CronJobService],
   controllers: [CronJobController],

@@ -4,6 +4,7 @@ import {
   ConflictException,
   NotFoundException,
   HttpStatus,
+  Logger,
 } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
@@ -19,6 +20,8 @@ import { Movie, MovieDocument } from "../../schemas/movies.schema";
 
 @Injectable()
 export class ShowService {
+  private readonly logger = new Logger(ShowService.name);
+
   constructor(
     @InjectModel(Show.name) private readonly showModel: Model<ShowDocument>,
     @InjectModel(Theater.name)
@@ -382,6 +385,22 @@ export class ShowService {
       statusCode: 200,
       success: true,
       message: "Show deleted successfully.",
+    };
+  }
+
+  //Cron-job function
+  async deleteOldShows() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const deleteResult = await this.showModel.deleteMany({
+      showDate: { $lt: today },
+    });
+
+    this.logger.log(`${deleteResult.deletedCount} old shows deleted.`);
+
+    return {
+      message: "Old shows deleted successfully.",
+      deletedCount: deleteResult.deletedCount,
     };
   }
 }

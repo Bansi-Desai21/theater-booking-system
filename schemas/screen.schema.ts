@@ -20,6 +20,9 @@ export class Screen {
   @Prop({ default: true })
   isActive: Boolean;
 
+  @Prop({ default: false })
+  isComplete: Boolean;
+
   @Prop({ type: Types.ObjectId, ref: "SeatLayout" })
   seatLayoutId: string;
 }
