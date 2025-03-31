@@ -19,6 +19,10 @@ import { User, UserDocument } from "../../schemas/user.schema";
 import { Screen, ScreenDocument } from "../../schemas/screen.schema";
 import { CloudinaryService } from "../cloudinary/cloudinary.service";
 import { Show, ShowDocument, ShowStatusEnum } from "../../schemas/shows.schema";
+import {
+  SeatLayout,
+  SeatLayoutDocument,
+} from "../../schemas/seat-layout.schema";
 @Injectable()
 export class TheaterService {
   constructor(
@@ -26,7 +30,8 @@ export class TheaterService {
     @InjectModel(Theater.name) private theaterModel: Model<TheaterDocument>,
     @InjectModel(Screen.name) private screenModel: Model<ScreenDocument>,
     @InjectModel(Show.name) private showModel: Model<ShowDocument>,
-
+    @InjectModel(SeatLayout.name)
+    private seatLayoutModel: Model<SeatLayoutDocument>,
     private readonly cloudinaryService: CloudinaryService
   ) {}
 
@@ -367,10 +372,13 @@ export class TheaterService {
 
       theater.isRemoved = true;
       await theater.save();
-      await this.screenModel.updateMany(
-        { theaterId: new Types.ObjectId(id) },
-        { $set: { isRemoved: true } }
-      );
+      await this.screenModel.deleteMany({ theaterId: new Types.ObjectId(id) });
+      await this.seatLayoutModel.deleteMany({
+        theaterId: new Types.ObjectId(id),
+      });
+      await this.showModel.deleteMany({
+        theaterId: new Types.ObjectId(id),
+      });
       return createResponse(200, true, "Theater deleted successfully.");
     } catch (error) {
       throw new EnhancedHttpException(

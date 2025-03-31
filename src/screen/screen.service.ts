@@ -16,13 +16,19 @@ import {
   EnhancedHttpException,
 } from "../utils/helper.response.function";
 import { Show, ShowDocument, ShowStatusEnum } from "../../schemas/shows.schema";
+import {
+  SeatLayout,
+  SeatLayoutDocument,
+} from "../../schemas/seat-layout.schema";
 
 @Injectable()
 export class ScreenService {
   constructor(
     @InjectModel(Screen.name) private screenModel: Model<ScreenDocument>,
     @InjectModel(Theater.name) private theaterModel: Model<TheaterDocument>,
-    @InjectModel(Show.name) private showModel: Model<ShowDocument>
+    @InjectModel(Show.name) private showModel: Model<ShowDocument>,
+    @InjectModel(SeatLayout.name)
+    private seatLayoutModel: Model<SeatLayoutDocument>
   ) {}
 
   async addScreen(
@@ -156,7 +162,6 @@ export class ScreenService {
       const skip = (page - 1) * limit;
       let query = {
         theaterId: new Types.ObjectId(theaterId),
-        isRemoved: false,
       };
       if (isComplete) query["isComplete"] = true;
 
@@ -271,8 +276,13 @@ export class ScreenService {
         });
       }
 
-      screen.isRemoved = true;
-      await screen.save();
+      await this.screenModel.findByIdAndDelete({
+        _id: new Types.ObjectId(screenId),
+      });
+
+      await this.seatLayoutModel.deleteMany({
+        screenId: new Types.ObjectId(screenId),
+      });
 
       await this.theaterModel.findOneAndUpdate(
         { _id: screen.theaterId },

@@ -93,13 +93,6 @@ export class CreateSeatLayoutDto {
 
 export class UpdateSeatLayoutDto {
   @ApiProperty({
-    example: "65f9bfe0c7a4a527b8c7d5f1",
-    description: "Seat Layout ID",
-  })
-  @IsMongoId()
-  seatLayoutId: string;
-
-  @ApiProperty({
     example: 5,
     description: "Updated total number of rows (optional).",
   })

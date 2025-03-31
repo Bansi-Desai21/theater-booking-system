@@ -14,9 +14,6 @@ export class Screen {
   @Prop({ type: Types.ObjectId, ref: "Theater" })
   theaterId: string;
 
-  @Prop({ default: false })
-  isRemoved: Boolean;
-
   @Prop({ default: true })
   isActive: Boolean;
 

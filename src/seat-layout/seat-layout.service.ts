@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   HttpStatus,
   Injectable,
   NotFoundException,
@@ -41,7 +42,19 @@ export class SeatLayoutService {
           path,
         });
       }
-
+      const alreadyExist = await this.seatLayoutModel.findOne({
+        screenId: new Types.ObjectId(dto.screenId),
+        theaterId: new Types.ObjectId(screen.theaterId),
+      });
+      if (alreadyExist) {
+        throw new ConflictException({
+          statusCode: 409,
+          success: false,
+          message:
+            "Seat layout already exists for this screen. Please update the existing layout instead.",
+          path,
+        });
+      }
       const seats: {
         row: string;
         seatNumber: number;
@@ -49,7 +62,7 @@ export class SeatLayoutService {
         price: number;
         isAvailable: boolean;
       }[] = [];
-      const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
       const { rows, cols, defaultRegularPrice, seats: tiers = [] } = dto;
 
       // Sort seats from bottom: VIP -> Premium -> Regular
@@ -267,44 +280,17 @@ export class SeatLayoutService {
       seatLayout.cols = cols;
       await seatLayout.save();
 
+      await this.screenModel.findByIdAndUpdate(
+        { _id: new Types.ObjectId(seatLayout.screenId) },
+        { $set: { totalSeats: seatLayout.seats.length } }
+      );
+
       return createResponse(
         200,
         true,
         "Seat layout updated successfully.",
         seatLayout
       );
-    } catch (error) {
-      throw new EnhancedHttpException(
-        {
-          statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
-          message: error?.message || "Internal Server Error",
-          path,
-        },
-        error.status || HttpStatus.INTERNAL_SERVER_ERROR
-      );
-    }
-  }
-
-  async deleteSeatLayout(seatLayoutId: string, path: string) {
-    try {
-      const seatLayout = await this.seatLayoutModel.findById(seatLayoutId);
-      if (!seatLayout) {
-        throw new NotFoundException({
-          statusCode: 404,
-          success: false,
-          message: "Seat layout not found.",
-          path,
-        });
-      }
-      await this.screenModel.findOneAndUpdate(
-        { _id: seatLayout.screenId },
-        { $set: { seatLayoutId: null } },
-        { new: true }
-      );
-
-      await this.seatLayoutModel.deleteOne({ _id: seatLayoutId });
-
-      return createResponse(200, true, "Seat layout deleted successfully.");
     } catch (error) {
       throw new EnhancedHttpException(
         {
