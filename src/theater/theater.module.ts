@@ -7,7 +7,7 @@ import { User, UserSchema } from "../../schemas/user.schema";
 import { Screen, ScreenSchema } from "../../schemas/screen.schema";
 import { CloudinaryModule } from "../cloudinary/cloudinary.module";
 import { Show, ShowSchema } from "../../schemas/shows.schema";
-
+import { SeatLayout, SeatLayoutSchema } from "../../schemas/seat-layout.schema";
 @Module({
   imports: [
     MongooseModule.forFeature([
@@ -15,6 +15,7 @@ import { Show, ShowSchema } from "../../schemas/shows.schema";
       { name: User.name, schema: UserSchema },
       { name: Screen.name, schema: ScreenSchema },
       { name: Show.name, schema: ShowSchema },
+      { name: SeatLayout.name, schema: SeatLayoutSchema },
     ]),
     CloudinaryModule,
   ],

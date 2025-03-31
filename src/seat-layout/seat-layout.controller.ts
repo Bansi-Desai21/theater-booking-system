@@ -91,22 +91,6 @@ export class SeatLayoutController {
 
   @UseGuards(RolesGuard)
   @Roles(Role.SubAdmin)
-  @Delete(":seatLayoutId")
-  @ApiOperation({ summary: "Delete seat layout" })
-  @ApiResponse({
-    status: 200,
-    description: "Seat layout deleted successfully.",
-  })
-  @ApiResponse({ status: 404, description: "Seat layout not found." })
-  async deleteSeatLayout(
-    @Param("seatLayoutId") seatLayoutId: string,
-    @Req() req
-  ) {
-    return this.seatLayoutService.deleteSeatLayout(seatLayoutId, req.url);
-  }
-
-  @UseGuards(RolesGuard)
-  @Roles(Role.SubAdmin)
   @Patch(":seatLayoutId/seats")
   @ApiOperation({ summary: "Update seat availability" })
   @ApiResponse({
