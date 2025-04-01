@@ -90,7 +90,7 @@ export class SeatLayoutController {
   }
 
   @UseGuards(RolesGuard)
-  @Roles(Role.SubAdmin)
+  @Roles(Role.SubAdmin, Role.SuperAdmin)
   @Patch(":seatLayoutId/seats")
   @ApiOperation({ summary: "Update seat availability" })
   @ApiResponse({

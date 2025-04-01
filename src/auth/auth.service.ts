@@ -7,7 +7,7 @@ import {
   ForbiddenException,
 } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
+import { Model, Types } from "mongoose";
 import * as bcrypt from "bcrypt";
 import * as _ from "lodash";
 import {
@@ -29,12 +29,25 @@ import { sendEmail } from "../utils/email.service";
 import { PasswordReset } from "../../schemas/paaword-reset.schema";
 import { Role } from "../utils/roles.enum";
 import { CloudinaryService } from "../cloudinary/cloudinary.service";
+import { Show, ShowDocument, ShowStatusEnum } from "../../schemas/shows.schema";
+import { Theater, TheaterDocument } from "../../schemas/theater.schema";
+import { Screen, ScreenDocument } from "../../schemas/screen.schema";
+import {
+  SeatLayout,
+  SeatLayoutDocument,
+} from "../../schemas/seat-layout.schema";
 @Injectable()
 export class AuthService {
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel(PasswordReset.name)
     private passwordResetModel: Model<PasswordReset>,
+    @InjectModel(Show.name) private showModel: Model<ShowDocument>,
+    @InjectModel(Theater.name) private theaterModel: Model<TheaterDocument>,
+    @InjectModel(Screen.name) private screenModel: Model<ScreenDocument>,
+    @InjectModel(SeatLayout.name)
+    private seatLayoutModel: Model<SeatLayoutDocument>,
+
     private readonly cloudinaryService: CloudinaryService
   ) {}
 
@@ -412,11 +425,11 @@ export class AuthService {
 
   async updateTheaterOwnerStatus(
     user: AuthUserDto,
-    theaterId: string,
+    ownerId: string,
     path: string
   ) {
     try {
-      const theaterOwner = await this.userModel.findById(theaterId, {
+      const theaterOwner = await this.userModel.findById(ownerId, {
         password: 0,
       });
 
@@ -438,6 +451,42 @@ export class AuthService {
 
       theaterOwner.isActive = !theaterOwner.isActive;
       await theaterOwner.save();
+
+      if (!theaterOwner.isActive) {
+        const theater = await this.theaterModel
+          .findOne({
+            ownerId: new Types.ObjectId(ownerId),
+          })
+          .lean();
+
+        if (theater) {
+          const theaterId = new Types.ObjectId(theater._id as string);
+
+          const updatePromises = [
+            this.showModel.updateMany(
+              {
+                theaterId,
+                status: { $ne: ShowStatusEnum.COMPLETED },
+              },
+              {
+                $set: { status: ShowStatusEnum.CANCELLED },
+              }
+            ),
+
+            this.screenModel.updateMany(
+              { theaterId },
+              { $set: { isActive: false } }
+            ),
+
+            this.seatLayoutModel.updateMany(
+              { theaterId },
+              { $set: { isActive: false } }
+            ),
+          ];
+
+          await Promise.all(updatePromises);
+        }
+      }
 
       return createResponse(
         200,
