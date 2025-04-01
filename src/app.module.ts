@@ -70,7 +70,15 @@ export class AppModule implements NestModule {
         { path: "cron/delete-movies", method: RequestMethod.GET },
         { path: "user-dashboard/list-shows", method: RequestMethod.GET },
         { path: "movies/list", method: RequestMethod.GET },
-        { path: "user-dashboard/shows/by-movie", method: RequestMethod.GET }
+        {
+          path: "user-dashboard/get-screen-details/:id",
+          method: RequestMethod.GET,
+        },
+        { path: "user-dashboard/list/:theaterId", method: RequestMethod.GET },
+        {
+          path: "user-dashboard/seat-layout/:screenId",
+          method: RequestMethod.GET,
+        }
       )
       .forRoutes("*");
   }
