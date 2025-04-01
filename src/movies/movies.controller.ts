@@ -67,8 +67,6 @@ export class MovieController {
     return this.movieService.listMovies(req.url, query);
   }
 
-  @UseGuards(RolesGuard)
-  @Roles(Role.SuperAdmin, Role.SubAdmin)
   @Get(":id")
   @ApiOperation({ summary: "Get a single movie by ID" })
   @ApiParam({
