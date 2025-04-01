@@ -69,6 +69,20 @@ export class ScreenController {
   @Get("list/:theaterId")
   @ApiOperation({ summary: "List all screens of a theater with pagination" })
   @ApiQuery({
+    name: "isComplete",
+    type: Boolean,
+    required: false,
+    example: true,
+    description: "Screen status",
+  })
+  @ApiQuery({
+    name: "isActive",
+    type: Boolean,
+    required: false,
+    example: true,
+    description: "Screen activation status",
+  })
+  @ApiQuery({
     name: "page",
     required: false,
     example: 1,
@@ -84,6 +98,7 @@ export class ScreenController {
   async listScreens(
     @Param("theaterId") theaterId: string,
     @Query("isComplete") isComplete: Boolean,
+    @Query("isActive") isActive: Boolean,
     @Query("page") page = 1,
     @Query("limit") limit = 10,
     @Req() req
@@ -94,6 +109,7 @@ export class ScreenController {
       limit: Number(limit),
       path: req.url,
       isComplete,
+      isActive,
     });
   }
 

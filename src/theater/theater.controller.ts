@@ -94,6 +94,13 @@ export class TheaterController {
     example: "65cda43bfc13ae1d4f7f5b6c",
     required: false,
   })
+  @ApiQuery({
+    name: "isActive",
+    type: Boolean,
+    required: false,
+    example: true,
+    description: "Screen activation status",
+  })
   @ApiResponse({
     status: 200,
     description: "List of theaters retrieved successfully.",
@@ -102,15 +109,17 @@ export class TheaterController {
     @Query("ownerId") ownerId: string,
     @Query("page") page = 1,
     @Query("limit") limit = 10,
+    @Query("isActive") isActive: Boolean,
     @Req() req
   ) {
-    return this.theaterService.getAllTheaters(
-      Number(page),
-      Number(limit),
-      req.user,
-      req.url,
-      ownerId
-    );
+    return this.theaterService.getAllTheaters({
+      page: Number(page),
+      limit: Number(limit),
+      user: req.user,
+      path: req.url,
+      ownerId,
+      isActive,
+    });
   }
 
   @UseGuards(RolesGuard)

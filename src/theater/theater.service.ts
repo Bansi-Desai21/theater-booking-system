@@ -128,16 +128,25 @@ export class TheaterService {
     }
   }
 
-  async getAllTheaters(
-    page: number,
-    limit: number,
-    user: AuthUserDto,
-    path: string,
-    ownerId?: string
-  ) {
+  async getAllTheaters({
+    page,
+    limit,
+    user,
+    path,
+    ownerId,
+    isActive,
+  }: {
+    page: number;
+    limit: number;
+    user: AuthUserDto;
+    path: string;
+    ownerId?: string;
+    isActive?: Boolean;
+  }) {
     try {
       const skip = (page - 1) * limit;
       const ownerObjectId = new Types.ObjectId(ownerId);
+      isActive = Boolean(isActive);
       let query = { ownerId: ownerObjectId, isRemoved: false };
 
       if (user.role === Role.SubAdmin) {
@@ -146,6 +155,7 @@ export class TheaterService {
           isRemoved: false,
         };
       }
+      if (isActive) query["isActive"] = isActive;
 
       const theaters = await this.theaterModel
         .find(query)

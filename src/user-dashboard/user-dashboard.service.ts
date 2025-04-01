@@ -16,6 +16,7 @@ export class UserDashboardService {
 
   async getTheatersByMovie(
     movieId: string,
+    date: Date,
     page: number,
     limit: number,
     path: string
@@ -41,7 +42,7 @@ export class UserDashboardService {
                 $match: {
                   movieId: new Types.ObjectId(movieId),
                   status: "ACTIVE",
-                  isRemoved: false,
+                  showDate: new Date(date),
                 },
               },
               {
@@ -59,18 +60,17 @@ export class UserDashboardService {
         },
         {
           $match: {
-            shows: { $ne: [] }, // Ensure the theater has at least one active show
+            shows: { $ne: [] },
           },
         },
         {
           $facet: {
-            totalRecords: [{ $count: "count" }], // Count total records before pagination
-            theaters: [{ $skip: skip }, { $limit: limit }], // Apply pagination
+            totalRecords: [{ $count: "count" }],
+            theaters: [{ $skip: skip }, { $limit: limit }],
           },
         },
       ]);
 
-      // Extract totalRecords count (default to 0 if empty)
       const totalRecords = result[0].totalRecords.length
         ? result[0].totalRecords[0].count
         : 0;
