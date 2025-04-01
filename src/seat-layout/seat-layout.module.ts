@@ -15,5 +15,6 @@ import { Screen, ScreenSchema } from "../../schemas/screen.schema";
 
   providers: [SeatLayoutService],
   controllers: [SeatLayoutController],
+  exports: [SeatLayoutService],
 })
 export class SeatLayoutModule {}
