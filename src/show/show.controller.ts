@@ -91,9 +91,8 @@ export class ShowController {
     @Req() req
   ) {
     const user = req.user;
-    const isAdmin =
-      user?.role === Role.SubAdmin || user?.role === Role.SuperAdmin;
-    const ownerId = isAdmin ? user.id : null;
+    const isSubAdmin = user?.role === Role.SubAdmin;
+    const ownerId = isSubAdmin ? user.id : null;
 
     return this.showService.listShows({
       ownerId,
