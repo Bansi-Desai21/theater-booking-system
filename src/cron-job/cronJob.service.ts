@@ -31,10 +31,18 @@ export class CronJobService {
     this.logger.log("Old movie deletion completed.");
   }
 
+  //Shows cron jobs
   @Cron("30 0 * * *")
   async deleteOldShowsCron() {
     this.logger.log("Running scheduled job: Deleting old shows...");
     await this.showService.deleteOldShows();
     this.logger.log(`Old shows deleted.`);
+  }
+
+  @Cron("*/10 * * * *")
+  async markShowsAsCompleted() {
+    this.logger.log("Running scheduled job: update show status...");
+    await this.showService.markShowsAsCompleted();
+    this.logger.log(`Show status updated.`);
   }
 }

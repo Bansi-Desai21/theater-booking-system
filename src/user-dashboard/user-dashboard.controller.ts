@@ -75,6 +75,13 @@ export class UserDashboardController {
     required: false,
     description: "Number of results per page (default: 10)",
   })
+  @ApiQuery({
+    name: "date",
+    required: true,
+    type: Date,
+    description: "Filter by date",
+    example: "2025-06-17",
+  })
   @ApiResponse({
     status: 200,
     description: "List of theaters with active shows for the given movie.",
@@ -91,12 +98,14 @@ export class UserDashboardController {
     @Query("movieId") movieId: string,
     @Query("page") page: string,
     @Query("limit") limit: string,
+    @Query("date") date: Date,
     @Req() req
   ) {
     const pageNum = parseInt(page) || 1;
     const limitNum = parseInt(limit) || 10;
     return this.userDashboardService.getTheatersByMovie(
       movieId,
+      date,
       pageNum,
       limitNum,
       req.url

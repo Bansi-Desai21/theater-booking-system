@@ -403,4 +403,20 @@ export class ShowService {
       deletedCount: deleteResult.deletedCount,
     };
   }
+
+  async markShowsAsCompleted() {
+    const now = new Date();
+
+    const updateResult = await this.showModel.updateMany(
+      { endTime: { $lt: now }, status: "ACTIVE" },
+      { $set: { status: "COMPLETED" } }
+    );
+
+    this.logger.log(`${updateResult.modifiedCount} shows marked as COMPLETED.`);
+
+    return {
+      message: "Old shows marked as COMPLETED successfully.",
+      modifiedCount: updateResult.modifiedCount,
+    };
+  }
 }

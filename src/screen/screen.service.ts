@@ -150,12 +150,14 @@ export class ScreenService {
     page,
     limit,
     isComplete,
+    isActive,
     path,
   }: {
     theaterId: string;
     page: number;
     limit: number;
     isComplete?: Boolean;
+    isActive?: Boolean;
     path: string;
   }) {
     try {
@@ -163,7 +165,11 @@ export class ScreenService {
       let query = {
         theaterId: new Types.ObjectId(theaterId),
       };
-      if (isComplete) query["isComplete"] = true;
+      isActive = Boolean(isActive);
+      isComplete = Boolean(isComplete);
+
+      if (isComplete) query["isComplete"] = isComplete;
+      if (isActive) query["isActive"] = isActive;
 
       const [screens, total] = await Promise.all([
         this.screenModel
