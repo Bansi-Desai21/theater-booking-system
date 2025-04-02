@@ -64,6 +64,36 @@ export class UserDashboardService {
           },
         },
         {
+          $lookup: {
+            from: "seatlayouts",
+            localField: "_id",
+            foreignField: "theaterId",
+            as: "seatLayouts",
+          },
+        },
+        {
+          $addFields: {
+            seatTypes: {
+              $reduce: {
+                input: "$seatLayouts",
+                initialValue: [],
+                in: {
+                  $setUnion: ["$$value", "$$this.seats.type"],
+                },
+              },
+            },
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            name: 1,
+            location: 1,
+            seatTypes: 1,
+            shows: 1,
+          },
+        },
+        {
           $facet: {
             totalRecords: [{ $count: "count" }],
             theaters: [{ $skip: skip }, { $limit: limit }],
