@@ -29,11 +29,11 @@ import { Roles, Role } from "../utils/roles.enum";
 import { ShowStatusEnum } from "../../schemas/shows.schema";
 
 @ApiTags("Shows")
-@ApiBearerAuth()
 @Controller("shows")
 export class ShowController {
   constructor(private readonly showService: ShowService) {}
 
+  @ApiBearerAuth()
   @UseGuards(RolesGuard)
   @Roles(Role.SubAdmin)
   @Post("add-show")
@@ -53,6 +53,7 @@ export class ShowController {
     return this.showService.addShow(createShowDto, ownerId, req.url);
   }
 
+  @ApiBearerAuth()
   @UseGuards(RolesGuard)
   @Roles(Role.SubAdmin, Role.SuperAdmin)
   @Get("list")
@@ -115,6 +116,7 @@ export class ShowController {
     return this.showService.getShowDetails(showId, req.url);
   }
 
+  @ApiBearerAuth()
   @UseGuards(RolesGuard)
   @Roles(Role.SubAdmin)
   @Put("update/:showId")
@@ -129,6 +131,7 @@ export class ShowController {
     return this.showService.updateShow(showId, updateShowDto, req.url);
   }
 
+  @ApiBearerAuth()
   @UseGuards(RolesGuard)
   @Roles(Role.SubAdmin)
   @Put("status/:showId")
@@ -149,6 +152,7 @@ export class ShowController {
     return this.showService.manageShowStatus(showId, status, req.url);
   }
 
+  @ApiBearerAuth()
   @UseGuards(RolesGuard)
   @Roles(Role.SubAdmin)
   @Delete("delete/:showId")
