@@ -17,30 +17,30 @@ export class CronJobController {
   @Get("sync")
   async runSync(@Headers() headers) {
     this.validateApiKey(headers);
-    await this.cronJobService.syncMovies();
+    return await this.cronJobService.syncMovies();
   }
 
   @Get("delete-movies")
   async deleteOldMovies(@Headers() headers) {
     this.validateApiKey(headers);
-    await this.cronJobService.deleteOldMovies();
+    return await this.cronJobService.deleteOldMovies();
   }
 
   @Get("delete-shows")
   async deleteOldShowsCron(@Headers() headers) {
     this.validateApiKey(headers);
-    await this.cronJobService.deleteOldShowsCron();
+    return await this.cronJobService.deleteOldShowsCron();
   }
 
   @Get("show-status")
   async showStatusCron(@Headers() headers) {
     this.validateApiKey(headers);
-    await this.cronJobService.markShowsAsCompleted();
+    return await this.cronJobService.markShowsAsCompleted();
   }
 
   @Get("release-seats")
   async releaseSeats(@Headers() headers) {
     this.validateApiKey(headers);
-    await this.cronJobService.updateSeatstatus();
+    return await this.cronJobService.updateSeatstatus();
   }
 }

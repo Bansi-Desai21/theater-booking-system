@@ -15,34 +15,29 @@ export class CronJobService {
 
   async syncMovies() {
     this.logger.log("Starting movie sync...");
-    await Promise.all([
+    return await Promise.all([
       this.movieService.syncNowShowing(),
       this.movieService.syncUpcoming(),
     ]);
-    this.logger.log("Movie sync completed.");
   }
 
   async deleteOldMovies() {
     this.logger.log("Deleting movies older than 90 days...");
-    await this.movieService.deleteMoviesOlderThan90Days();
-    this.logger.log("Old movie deletion completed.");
+    return await this.movieService.deleteMoviesOlderThan90Days();
   }
 
   async deleteOldShowsCron() {
     this.logger.log("Running scheduled job: Deleting old shows...");
-    await this.showService.deleteOldShows();
-    this.logger.log(`Old shows deleted.`);
+    return await this.showService.deleteOldShows();
   }
 
   async markShowsAsCompleted() {
     this.logger.log("Running scheduled job: update show status...");
-    await this.showService.markShowsAsCompleted();
-    this.logger.log(`Show status updated.`);
+    return await this.showService.markShowsAsCompleted();
   }
 
   async updateSeatstatus() {
     this.logger.log("Running scheduled job: Releasing seat...");
-    await this.seatLayoutService.releaseExpiredSeats();
-    this.logger.log(`Seat status updated.`);
+    return await this.seatLayoutService.releaseExpiredSeats();
   }
 }
