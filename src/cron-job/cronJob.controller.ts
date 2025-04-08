@@ -17,16 +17,30 @@ export class CronJobController {
   @Get("sync")
   async runSync(@Headers() headers) {
     this.validateApiKey(headers);
-    console.log("Triggered sync by GitHub Actions");
     await this.cronJobService.syncMovies();
-    return { message: "Sync triggered successfully!" };
   }
 
   @Get("delete-movies")
   async deleteOldMovies(@Headers() headers) {
     this.validateApiKey(headers);
-    console.log("Triggered delete-movies by GitHub Actions");
     await this.cronJobService.deleteOldMovies();
-    return { message: "Movie deletion triggered successfully!" };
+  }
+
+  @Get("delete-shows")
+  async deleteOldShowsCron(@Headers() headers) {
+    this.validateApiKey(headers);
+    await this.cronJobService.deleteOldShowsCron();
+  }
+
+  @Get("show-status")
+  async showStatusCron(@Headers() headers) {
+    this.validateApiKey(headers);
+    await this.cronJobService.markShowsAsCompleted();
+  }
+
+  @Get("release-seats")
+  async releaseSeats(@Headers() headers) {
+    this.validateApiKey(headers);
+    await this.cronJobService.updateSeatstatus();
   }
 }

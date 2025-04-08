@@ -1,0 +1,15 @@
+name: Update Show Status
+
+on:
+  schedule:
+    - cron: "*/10 * * * *" # Every 10 minutes
+  workflow_dispatch:
+
+jobs:
+  update-show-status:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update Show Status
+        run: |
+          curl -X GET "https://theater-booking-system.onrender.com/cron/show-status" \
+          -H "Authorization: Bearer ${{ secrets.CRON_API_KEY }}"

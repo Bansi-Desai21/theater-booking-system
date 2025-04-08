@@ -408,8 +408,9 @@ export class SeatLayoutService {
       );
     }
 
-    console.log(
-      `Released seats for completed shows successfully.Booking count ${bookings.length}`
-    );
+    return {
+      message: `Released seats for completed shows successfully.`,
+      bookingCount: bookings.length,
+    };
   }
 }
