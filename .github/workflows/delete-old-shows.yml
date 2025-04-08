@@ -1,0 +1,15 @@
+name: Delete Old Shows
+
+on:
+  schedule:
+    - cron: "0 19 * * *" # 12:30 AM IST (Convert IST to UTC → 19:00 UTC)
+  workflow_dispatch:
+
+jobs:
+  delete-old-shows:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete Old Shows
+        run: |
+          curl -X GET "https://theater-booking-system.onrender.com/cron/delete-shows" \
+          -H "Authorization: Bearer ${{ secrets.CRON_API_KEY }}"
