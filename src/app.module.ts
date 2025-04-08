@@ -68,8 +68,13 @@ export class AppModule implements NestModule {
         { path: "auth/verify-reset-token/:token", method: RequestMethod.GET },
         { path: "auth/set-password", method: RequestMethod.POST },
         { path: "cities/list-cities", method: RequestMethod.GET },
+
         { path: "cron/sync", method: RequestMethod.GET },
         { path: "cron/delete-movies", method: RequestMethod.GET },
+        { path: "cron/delete-shows", method: RequestMethod.GET },
+        { path: "cron/show-status", method: RequestMethod.GET },
+        { path: "cron/release-seats", method: RequestMethod.GET },
+
         { path: "user-dashboard/list-shows", method: RequestMethod.GET },
         { path: "movies/list", method: RequestMethod.GET },
         { path: "movies/:id", method: RequestMethod.GET },
