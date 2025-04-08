@@ -2,14 +2,15 @@ import { Injectable, Logger } from "@nestjs/common";
 import { Cron } from "@nestjs/schedule";
 import { MovieService } from "../movies/movies.service";
 import { ShowService } from "../show/show.service";
-
+import { SeatLayoutService } from "../seat-layout/seat-layout.service";
 @Injectable()
 export class CronJobService {
   private readonly logger = new Logger(CronJobService.name);
 
   constructor(
     private readonly movieService: MovieService,
-    private readonly showService: ShowService
+    private readonly showService: ShowService,
+    private readonly seatLayoutService: SeatLayoutService
   ) {}
 
   // Runs daily at 12:00 AM
@@ -44,5 +45,12 @@ export class CronJobService {
     this.logger.log("Running scheduled job: update show status...");
     await this.showService.markShowsAsCompleted();
     this.logger.log(`Show status updated.`);
+  }
+
+  @Cron("* * * * *")
+  async updateSeatstatus() {
+    this.logger.log("Running scheduled job: Releasing seat...");
+    await this.seatLayoutService.releaseExpiredSeats();
+    this.logger.log(`Seat status updated.`);
   }
 }

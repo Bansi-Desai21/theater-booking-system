@@ -18,6 +18,7 @@ import { ShowModule } from "./show/show.module";
 import { CronJobModule } from "./cron-job/cronJob.module";
 import { SeatLayoutModule } from "./seat-layout/seat-layout.module";
 import { UserDashboardModule } from "./user-dashboard/user-dashboard.module";
+import { BookingModule } from "./booking/booking.module";
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -32,6 +33,7 @@ import { UserDashboardModule } from "./user-dashboard/user-dashboard.module";
     SeatLayoutModule,
     CronJobModule,
     UserDashboardModule,
+    BookingModule,
   ],
   controllers: [],
   providers: [],
