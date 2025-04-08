@@ -33,6 +33,7 @@ export class SeatLayout {
         },
         price: { type: Number, required: true },
         isAvailable: { type: Boolean, default: true },
+        isBooked: { type: Boolean, default: false },
       },
     ],
     default: [],
@@ -43,6 +44,7 @@ export class SeatLayout {
     type: SeatType;
     price: number;
     isAvailable: boolean;
+    isBooked: boolean;
   }[];
 }
 

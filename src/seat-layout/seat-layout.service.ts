@@ -22,13 +22,18 @@ import {
   createResponse,
   EnhancedHttpException,
 } from "../utils/helper.response.function";
+import { Show, ShowDocument } from "../../schemas/shows.schema";
+import { Booking, BookingDocument } from "../../schemas/booking.schema";
 
 @Injectable()
 export class SeatLayoutService {
   constructor(
     @InjectModel(SeatLayout.name)
     private seatLayoutModel: Model<SeatLayoutDocument>,
-    @InjectModel(Screen.name) private screenModel: Model<ScreenDocument>
+    @InjectModel(Show.name) private readonly showModel: Model<ShowDocument>,
+    @InjectModel(Screen.name) private screenModel: Model<ScreenDocument>,
+    @InjectModel(Booking.name)
+    private bookingModel: Model<BookingDocument>
   ) {}
 
   async createSeatLayout(dto: CreateSeatLayoutDto, path: string) {
@@ -160,13 +165,14 @@ export class SeatLayoutService {
 
       const seatTypeMap = new Map();
 
-      seats.forEach(({ row, type, price, isAvailable }) => {
+      seats.forEach(({ row, type, price, isAvailable, isBooked }) => {
         if (!seatTypeMap.has(type)) {
           seatTypeMap.set(type, {
             rowSet: new Set(),
             type,
             price,
             isAvailable,
+            isBooked,
           });
         }
         seatTypeMap.get(type).rowSet.add(row);
@@ -179,6 +185,7 @@ export class SeatLayoutService {
           type: value.type,
           price: value.price,
           isAvailable: value.isAvailable,
+          isBooked: value.isBooked,
         };
       });
 
@@ -213,6 +220,20 @@ export class SeatLayoutService {
           statusCode: 404,
           success: false,
           message: "Seat layout not found.",
+          path,
+        });
+      }
+      const isBooked = await this.seatLayoutModel.findOne({
+        _id: seatLayoutId,
+        "seats.isBooked": true,
+      });
+
+      if (isBooked) {
+        throw new BadRequestException({
+          statusCode: 400,
+          success: false,
+          message:
+            "You cannot update seat layout because some seats are already booked.",
           path,
         });
       }
@@ -259,6 +280,7 @@ export class SeatLayoutService {
         type: SeatType;
         price: number;
         isAvailable: boolean;
+        isBooked: boolean;
       }[] = [];
       for (let r = 0; r < rows; r++) {
         const rowLabel = getRowLabel(r);
@@ -271,6 +293,7 @@ export class SeatLayoutService {
             type,
             price,
             isAvailable: true,
+            isBooked: false,
           });
         }
       }
@@ -348,5 +371,45 @@ export class SeatLayoutService {
         error.status || HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
+  }
+
+  async releaseExpiredSeats() {
+    const completedShows = await this.showModel.find({
+      endTime: { $lt: new Date() },
+    });
+
+    if (!completedShows.length) {
+      console.log("No completed shows found.");
+      return;
+    }
+
+    const showIds = completedShows.map((show) => show._id);
+
+    const bookings = await this.bookingModel.find({
+      showId: { $in: showIds },
+    });
+
+    if (!bookings.length) {
+      console.log("No bookings found for completed shows.");
+      return;
+    }
+
+    for (const booking of bookings) {
+      await this.seatLayoutModel.updateOne(
+        { _id: booking.seatLayoutId },
+        {
+          $set: {
+            "seats.$[elem].isBooked": false,
+          },
+        },
+        {
+          arrayFilters: [{ "elem._id": { $in: booking.seatIds } }],
+        }
+      );
+    }
+
+    console.log(
+      `Released seats for completed shows successfully.Booking count ${bookings.length}`
+    );
   }
 }
