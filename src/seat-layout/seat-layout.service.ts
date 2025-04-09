@@ -379,8 +379,7 @@ export class SeatLayoutService {
     });
 
     if (!completedShows.length) {
-      console.log("No completed shows found.");
-      return;
+      return { message: "No completed shows found." };
     }
 
     const showIds = completedShows.map((show) => show._id);
@@ -390,8 +389,7 @@ export class SeatLayoutService {
     });
 
     if (!bookings.length) {
-      console.log("No bookings found for completed shows.");
-      return;
+      return { message: "No bookings found for completed shows." };
     }
 
     for (const booking of bookings) {
