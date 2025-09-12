@@ -165,8 +165,6 @@ export class ScreenService {
       let query = {
         theaterId: new Types.ObjectId(theaterId),
       };
-      isActive = Boolean(isActive);
-      isComplete = Boolean(isComplete);
 
       if (isComplete) query["isComplete"] = isComplete;
       if (isActive) query["isActive"] = isActive;
