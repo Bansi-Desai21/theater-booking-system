@@ -10,6 +10,8 @@ import {
   Delete,
   Patch,
   Query,
+  ParseBoolPipe,
+  ParseIntPipe,
 } from "@nestjs/common";
 import {
   ApiBearerAuth,
@@ -97,10 +99,10 @@ export class ScreenController {
   @ApiResponse({ status: 200, description: "Screens retrieved successfully." })
   async listScreens(
     @Param("theaterId") theaterId: string,
-    @Query("isComplete") isComplete: Boolean,
-    @Query("isActive") isActive: Boolean,
-    @Query("page") page = 1,
-    @Query("limit") limit = 10,
+    @Query("isComplete", ParseBoolPipe) isComplete: boolean,
+    @Query("isActive", ParseBoolPipe) isActive: boolean,
+    @Query("page", ParseIntPipe) page = 1,
+    @Query("limit", ParseIntPipe) limit = 10,
     @Req() req
   ) {
     return this.screenService.listScreens({
